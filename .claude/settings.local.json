@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer require *)",
+      "Bash(php artisan *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"email\":\"admin@ficct.edu.bo\",\"password\":\"Admin123\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json' http://127.0.0.1:8000/api/roles)",
+      "Bash(curl -s -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json' http://127.0.0.1:8000/api/permisos)",
+      "Bash(curl -s -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json' http://127.0.0.1:8000/api/usuarios)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/usuarios -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":99001234,\"nombre_completo\":\"Juan Perez Test\",\"email\":\"jperez@test.com\",\"password\":\"Jperez123\",\"rol_id\":3}')",
+      "Bash(curl -s -X PATCH http://127.0.0.1:8000/api/usuarios/99001234 -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"nombre_completo\":\"Juan Perez Actualizado\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/roles/4/permisos -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"permisos\":[1,4]}')",
+      "Bash(curl -s -X DELETE http://127.0.0.1:8000/api/usuarios/99001234 -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/logout -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json')",
+      "Bash(curl -s -X GET http://127.0.0.1:8000/api/usuarios -H 'Authorization: Bearer 2|YPeKF9PMTkkuqd2ajQ7rIqhUbCmC2C3MZvhODSIP3e5950f6' -H 'Accept: application/json')",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/login -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Origin: http://localhost:5174' -d '{\"email\":\"admin@ficct.edu.bo\",\"password\":\"Admin123\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Login OK - Token:', d['token'][:30]+'...'\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"admin@ficct.edu.bo\",\"password\":\"Admin123\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"10000001\",\"password\":\"Admin123\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":99999999}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":10000001}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/password/solicitar -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"email\":\"noexiste@test.com\"}')",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/registro/carreras -H \"Accept: application/json\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"coord@ficct.edu.bo\",\"password\":\"WRONG\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"coord@ficct.edu.bo\",\"password\":\"Coord123\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":12345678}')"
+    ]
+  }
+}
