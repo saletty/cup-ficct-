@@ -16,15 +16,16 @@ class DatabaseSeeder extends Seeder
         // ── 1. Permisos ─────────────────────────────────────────
         $permisos = [
             'Ver dashboard',
-            'Gestionar postulantes',
-            'Registrar notas',
-            'Ver reportes',
-            'Gestionar docentes',
-            'Gestionar grupos',
-            'Gestionar convocatorias',
-            'Gestionar usuarios',
-            'Ver carga horaria propia',
-            'Registrar asistencia',
+            'Gestionar usuarios',       // Admin: usuarios, roles, permisos, bitácora
+            'Gestionar postulantes',    // Operador + Cajero: registro y consulta
+            'Gestionar carreras',       // Coordinador: catálogo de carreras
+            'Gestionar convocatorias',  // Coordinador: periodos de admisión
+            'Gestionar grupos',         // Coordinador: grupos y horarios
+            'Gestionar docentes',       // Coordinador: docentes y asignaciones
+            'Ver carga horaria propia', // Docente: solo su propio horario
+            'Registrar asistencia',     // Docente: registrar asistencia a clases
+            'Ver reportes',             // Coordinador + Cajero: reportes del sistema
+            'Registrar notas',          // (reservado — no asignado a ningún rol actualmente)
         ];
 
         foreach ($permisos as $desc) {
@@ -55,19 +56,25 @@ class DatabaseSeeder extends Seeder
         // Administrador: todos los permisos
         $admin->permisos()->sync(Permiso::pluck('id'));
 
-        // Coordinador: dashboard, postulantes, notas, reportes, grupos, convocatorias
+        // Coordinador: gestión académica completa
         $coordinador->permisos()->sync(
             Permiso::whereIn('descripcion', [
-                'Ver dashboard', 'Gestionar postulantes', 'Registrar notas',
-                'Ver reportes', 'Gestionar grupos', 'Gestionar convocatorias',
+                'Ver dashboard',
+                'Gestionar carreras',
+                'Gestionar convocatorias',
+                'Gestionar grupos',
+                'Gestionar docentes',
+                'Gestionar postulantes',
+                'Ver reportes',
             ])->pluck('id')
         );
 
-        // Docente: dashboard, carga horaria, asistencia, notas
+        // Docente: SOLO su carga horaria y asistencia (NO registrar notas)
         $docente->permisos()->sync(
             Permiso::whereIn('descripcion', [
-                'Ver dashboard', 'Registrar notas',
-                'Ver carga horaria propia', 'Registrar asistencia',
+                'Ver dashboard',
+                'Ver carga horaria propia',
+                'Registrar asistencia',
             ])->pluck('id')
         );
 
