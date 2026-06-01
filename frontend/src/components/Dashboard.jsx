@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000/api/v1';
+import client from '../api/client';
 
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -23,7 +22,7 @@ function CambioContrasenaObligatorio({ usuario, onCambiado, onLogout }) {
     }
     setLoading(true); setError('');
     try {
-      await axios.post(`${API_URL}/password/cambiar`, form, { headers: authHeader() });
+      await client.post(`/password/cambiar`, form, { headers: authHeader() });
       const u = JSON.parse(localStorage.getItem('usuario') || '{}');
       u.debe_cambiar_contrasena = false;
       localStorage.setItem('usuario', JSON.stringify(u));
@@ -92,11 +91,7 @@ export default function Dashboard({ usuario, debecambiar, onLogout }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/logout`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await client.post(`/logout`, {});
     } catch {
       // Si falla el logout remoto, limpiamos igual
     } finally {

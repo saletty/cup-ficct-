@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './Login.css';
-
-const API = 'http://127.0.0.1:8000/api/v1';
+import client from '../api/client';
 
 /* ── Datos estáticos de la página ──────────────────────────── */
 const CARRERAS_STATIC = [
@@ -97,7 +96,7 @@ export default function Login({ onLogin }) {
   }, []);
 
   useEffect(() => {
-    axios.get(`${API}/registro/carreras`)
+    client.get(`/registro/carreras`)
       .then(r => setCarreras(r.data))
       .catch(() => {}); // Silencioso: se usa CARRERAS_STATIC si falla
   }, []);
@@ -129,7 +128,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true); clearMessages();
     try {
-      const { data } = await axios.post(`${API}/login`, loginForm);
+      const { data } = await client.post(`/login`, loginForm);
       localStorage.setItem('token',   data.token);
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
       onLogin({ ...data });
@@ -152,7 +151,7 @@ export default function Login({ onLogin }) {
     if (!ciForm.CI.trim()) { setError('Ingrese su Cédula de Identidad.'); return; }
     setLoading(true); clearMessages();
     try {
-      const { data } = await axios.post(`${API}/registro/verificar-ci`, { CI: ciForm.CI });
+      const { data } = await client.post(`/registro/verificar-ci`, { CI: ciForm.CI });
       setCiVerificado(data.CI);
       setRegForm(p => ({ ...p, CI: data.CI }));
       goTo('reg-2');
@@ -173,7 +172,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true); clearMessages();
     try {
-      const { data } = await axios.post(`${API}/registro/completar`, regForm);
+      const { data } = await client.post(`/registro/completar`, regForm);
       setSuccess(data.mensaje);
       setRegForm(emptyReg);
       setCiVerificado(null);
@@ -197,7 +196,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true); clearMessages();
     try {
-      const { data } = await axios.post(`${API}/password/solicitar`, { email: resetEmail });
+      const { data } = await client.post(`/password/solicitar`, { email: resetEmail });
       setSuccess(data.mensaje);
       goTo('reset-sent');
     } catch {

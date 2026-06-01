@@ -8,7 +8,7 @@ function Postulantes() {
   useEffect(() => {
 
     axios
-      .get("http://127.0.0.1:8000/api/postulantes")
+      .get("/postulantes")  // usando client que ya tiene la baseURL
       .then((response) => {
         setPostulantes(response.data);
       })
