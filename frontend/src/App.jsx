@@ -1,12 +1,38 @@
 import { useState } from 'react';
-import Login       from './components/Login';
-import Dashboard   from './components/Dashboard';
-import Layout      from './components/Layout';
-import Bitacora    from './pages/Bitacora';
-import Carreras    from './pages/Carreras';
-import Postulantes from './pages/Postulantes';
-import Bachillerato from './pages/Bachillerato';
-import Inscripcion  from './pages/Inscripcion';
+import Login          from './components/Login';
+import Dashboard      from './components/Dashboard';
+import Layout         from './components/Layout';
+import Bitacora       from './pages/Bitacora';
+import Carreras       from './pages/Carreras';
+import Postulantes    from './pages/Postulantes';
+import Bachillerato   from './pages/Bachillerato';
+import Inscripcion    from './pages/Inscripcion';
+import Convocatorias  from './pages/Convocatorias';
+import Docentes       from './pages/Docentes';
+import Grupos         from './pages/Grupos';
+import CargaHoraria   from './pages/CargaHoraria';
+
+/*
+ * ================================================================
+ * App.jsx — Enrutador principal (state-based routing)
+ * ================================================================
+ * CU1  Iniciar Sesión       → <Login>  (no autenticado)
+ * CU2  Cerrar Sesión        → handleLogout() / Layout.jsx
+ * CU3  Gestionar Usuarios   → page 'usuarios'  → <Dashboard>
+ * CU4  Gestionar Roles      → page 'usuarios'  → <Dashboard>
+ * CU5  Gestionar Permisos   → filtro sidebar   / permiso guard
+ * CU6  Administrar Bitácora → page 'bitacora'  → <Bitacora>
+ * CU7  Gestionar Carreras   → page 'carreras'  → <Carreras>
+ * CU8  Gestionar Postulantes→ page 'postulantes' → <Postulantes>
+ *                             + flujo registro en <Login>
+ * CU9  Info. Bachillerato   → page 'bachillerato' → <Bachillerato>
+ * CU10 Inscripción CUP      → page 'inscripcion'  → <Inscripcion>
+ * CU11 Convocatorias        → page 'convocatorias' (pendiente frontend)
+ * CU12 Gestionar Docentes   → page 'docentes'      (pendiente frontend)
+ * CU13 Carga Horaria        → page 'carga-horaria' (pendiente frontend)
+ * CU14 Gestionar Grupos     → page 'grupos'        (pendiente frontend)
+ * ================================================================
+ */
 
 /**
  * Permiso requerido para ver cada página.
@@ -73,11 +99,10 @@ function App() {
     carreras:      <Carreras />,
     bitacora:      <Bitacora />,
     usuarios:      <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
-    // Páginas pendientes de implementar en el frontend:
-    convocatorias: <PaginaPendiente nombre="Gestionar Convocatorias" />,
-    grupos:        <PaginaPendiente nombre="Gestionar Grupos" />,
-    docentes:      <PaginaPendiente nombre="Gestionar Docentes" />,
-    'carga-horaria': <PaginaPendiente nombre="Mi Carga Horaria" />,
+    convocatorias:   <Convocatorias />,
+    grupos:          <Grupos />,
+    docentes:        <Docentes />,
+    'carga-horaria': <CargaHoraria />,
   };
 
   // setPage con guard incluido

@@ -141,14 +141,18 @@
   text-transform: uppercase;
 }
 
-.pg-badge--activo    { background: #dcfce7; color: #166534; }
-.pg-badge--inactivo  { background: #f3f4f6; color: #6b7280; }
-.pg-badge--bloqueado { background: #fee2e2; color: #991b1b; }
-.pg-badge--pendiente { background: #fef9c3; color: #854d0e; }
-.pg-badge--aprobado  { background: #dcfce7; color: #166534; }
-.pg-badge--reprobado { background: #fee2e2; color: #991b1b; }
-.pg-badge--activa    { background: #dbeafe; color: #1e40af; }
-.pg-badge--cerrada   { background: #f3f4f6; color: #6b7280; }
+.pg-badge--activo      { background: #dcfce7; color: #166534; }
+.pg-badge--inactivo    { background: #f3f4f6; color: #6b7280; }
+.pg-badge--bloqueado   { background: #fee2e2; color: #991b1b; }
+.pg-badge--pendiente   { background: #fef9c3; color: #854d0e; }
+.pg-badge--aprobado    { background: #dcfce7; color: #166534; }
+.pg-badge--reprobado   { background: #fee2e2; color: #991b1b; }
+.pg-badge--activa      { background: #dbeafe; color: #1e40af; }
+.pg-badge--cerrada     { background: #f3f4f6; color: #6b7280; }
+.pg-badge--habilitada  { background: #dcfce7; color: #166534; }
+.pg-badge--finalizada  { background: #f3f4f6; color: #6b7280; }
+.pg-badge--presencial  { background: #fef9c3; color: #854d0e; }
+.pg-badge--virtual     { background: #ede9fe; color: #5b21b6; }
 
 /* Acciones en tabla */
 .pg-actions { display: flex; gap: 6px; }
