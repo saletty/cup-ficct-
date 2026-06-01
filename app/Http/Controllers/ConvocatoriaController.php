@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Convocatoria;
+use App\Services\BitacoraService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+// ============================================================
+// CU11 — Gestionar Convocatorias
+// Estados válidos: 'habilitada' | 'finalizada'
+// Restricción:     fecha_fin > fecha_inicio (DB CHECK + validación PHP)
+// ============================================================
+class ConvocatoriaController extends Controller
+{
+    public function index(): JsonResponse
+    {
+        return response()->json(
+            Convocatoria::orderBy('fecha_inicio', 'desc')->get()
+        );
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id'           => ['required', 'string', 'max:10', 'unique:convocatoria,id'],
+            'nombre'       => ['required', 'string', 'max:100'],
+            'fecha_inicio' => ['required', 'date'],
+            'fecha_fin'    => ['required', 'date', 'after:fecha_inicio'],
+            'cupo_maximo'  => ['required', 'integer', 'min:1'],
+            'estado'       => ['sometimes', 'in:habilitada,finalizada'],
+        ], [
+            'id.unique'          => 'Ya existe una convocatoria con ese ID.',
+            'fecha_fin.after'    => 'La fecha de finalización debe ser posterior a la de inicio.',
+        ]);
+
+        $data['estado'] = $data['estado'] ?? 'habilitada';
+
+        $convocatoria = Convocatoria::create($data);
+        BitacoraService::log("Convocatoria creada: {$convocatoria->id} — {$convocatoria->nombre}");
+
+        return response()->json(['mensaje' => 'Convocatoria creada.', 'convocatoria' => $convocatoria], 201);
+    }
+
+    public function show(string $id): JsonResponse
+    {
+        $conv = Convocatoria::with('postulaciones')->findOrFail($id);
+        return response()->json($conv);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $conv = Convocatoria::findOrFail($id);
+
+        $data = $request->validate([
+            'nombre'       => ['sometimes', 'string', 'max:100'],
+            'fecha_inicio' => ['sometimes', 'date'],
+            'fecha_fin'    => ['sometimes', 'date', 'after:fecha_inicio'],
+            'cupo_maximo'  => ['sometimes', 'integer', 'min:1'],
+            'estado'       => ['sometimes', 'in:habilitada,finalizada'],
+        ], [
+            'fecha_fin.after' => 'La fecha de finalización debe ser posterior a la de inicio.',
+        ]);
+
+        // Validar fechas si solo una de las dos viene en el request
+        $inicio = $data['fecha_inicio'] ?? $conv->fecha_inicio;
+        $fin    = $data['fecha_fin']    ?? $conv->fecha_fin;
+        if ($fin <= $inicio) {
+            return response()->json(['mensaje' => 'La fecha de finalización debe ser posterior a la de inicio.'], 422);
+        }
+
+        $conv->update($data);
+        BitacoraService::log("Convocatoria actualizada: {$id}");
+
+        return response()->json(['mensaje' => 'Convocatoria actualizada.', 'convocatoria' => $conv->fresh()]);
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        $conv = Convocatoria::findOrFail($id);
+
+        if ($conv->postulaciones()->exists()) {
+            return response()->json(['mensaje' => 'No se puede eliminar: tiene postulaciones registradas.'], 409);
+        }
+
+        BitacoraService::log("Convocatoria eliminada: {$id}");
+        $conv->delete();
+
+        return response()->json(['mensaje' => 'Convocatoria eliminada.']);
+    }
+}

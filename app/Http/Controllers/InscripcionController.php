@@ -17,7 +17,7 @@ class InscripcionController extends Controller
     /* ── Listar convocatorias activas ───────────────────────── */
     public function convocatorias(): JsonResponse
     {
-        $convocatorias = Convocatoria::where('estado', 'activa')
+        $convocatorias = Convocatoria::where('estado', 'habilitada')
             ->orderBy('fecha_inicio', 'desc')
             ->get();
 
