@@ -4,11 +4,9 @@ RUN apt-get update && apt-get install -y \
     libpq-dev zip unzip curl git \
     && docker-php-ext-install pdo pdo_pgsql
 
-# Instalar Node.js 20
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
@@ -25,4 +23,9 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite
 
+# Crear script de inicio que corre migraciones antes de arrancar Apache
+RUN echo '#!/bin/bash\nphp artisan migrate --force\napache2-foreground' > /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 EXPOSE 80
+CMD ["/usr/local/bin/start.sh"]
