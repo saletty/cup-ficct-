@@ -36,8 +36,7 @@ class DatabaseSeeder extends Seeder
         $roles = [
             ['nombre' => 'Administrador', 'descripcion' => 'Acceso completo al sistema'],
             ['nombre' => 'Coordinador',   'descripcion' => 'Gestión académica de grupos y convocatorias'],
-            ['nombre' => 'Docente',       'descripcion' => 'Acceso a su carga horaria y registro de notas'],
-            ['nombre' => 'Cajero',        'descripcion' => 'Gestión de pagos e inscripciones'],
+            ['nombre' => 'Docente',       'descripcion' => 'Acceso a su carga horaria y registro de asistencia'],
             ['nombre' => 'Operador',      'descripcion' => 'Registro de postulantes en ventanilla'],
             ['nombre' => 'Postulante',    'descripcion' => 'Estudiante que postula a la FICCT'],
         ];
@@ -46,10 +45,17 @@ class DatabaseSeeder extends Seeder
             Rol::firstOrCreate(['nombre' => $r['nombre']], ['descripcion' => $r['descripcion']]);
         }
 
+        // Eliminar rol Cajero (obsoleto) y su usuario asociado
+        $cajeroRol = Rol::where('nombre', 'Cajero')->first();
+        if ($cajeroRol) {
+            User::where('rol_id', $cajeroRol->id)->delete();
+            $cajeroRol->permisos()->detach();
+            $cajeroRol->delete();
+        }
+
         $admin       = Rol::where('nombre', 'Administrador')->first();
         $coordinador = Rol::where('nombre', 'Coordinador')->first();
         $docente     = Rol::where('nombre', 'Docente')->first();
-        $cajero      = Rol::where('nombre', 'Cajero')->first();
         $operador    = Rol::where('nombre', 'Operador')->first();
         $postulante  = Rol::where('nombre', 'Postulante')->first();
 
@@ -75,13 +81,6 @@ class DatabaseSeeder extends Seeder
                 'Ver dashboard',
                 'Ver carga horaria propia',
                 'Registrar asistencia',
-            ])->pluck('id')
-        );
-
-        // Cajero: dashboard, postulantes, reportes
-        $cajero->permisos()->sync(
-            Permiso::whereIn('descripcion', [
-                'Ver dashboard', 'Gestionar postulantes', 'Ver reportes',
             ])->pluck('id')
         );
 
@@ -119,13 +118,6 @@ class DatabaseSeeder extends Seeder
                 'email'           => 'operador@ficct.edu.bo',
                 'password'        => 'Operador123',
                 'rol'             => $operador,
-            ],
-            [
-                'CI'              => 10000004,
-                'nombre_completo' => 'Cajero FICCT',
-                'email'           => 'cajero@ficct.edu.bo',
-                'password'        => 'Cajero123',
-                'rol'             => $cajero,
             ],
             [
                 'CI'              => 10000005,

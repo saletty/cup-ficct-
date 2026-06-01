@@ -1,12 +1,30 @@
 import { useState } from 'react';
-import Login     from './components/Login';
-import Dashboard from './components/Dashboard';
-import Layout    from './components/Layout';
-import Bitacora  from './pages/Bitacora';
-import Carreras  from './pages/Carreras';
+import Login       from './components/Login';
+import Dashboard   from './components/Dashboard';
+import Layout      from './components/Layout';
+import Bitacora    from './pages/Bitacora';
+import Carreras    from './pages/Carreras';
 import Postulantes from './pages/Postulantes';
 import Bachillerato from './pages/Bachillerato';
 import Inscripcion  from './pages/Inscripcion';
+
+/**
+ * Permiso requerido para ver cada página.
+ * null = cualquier usuario autenticado puede verla.
+ */
+const PERMISOS_PAGINAS = {
+  dashboard:       null,
+  inscripcion:     null,
+  postulantes:     'Gestionar postulantes',
+  bachillerato:    'Gestionar postulantes',
+  carreras:        'Gestionar carreras',
+  convocatorias:   'Gestionar convocatorias',
+  grupos:          'Gestionar grupos',
+  docentes:        'Gestionar docentes',
+  'carga-horaria': 'Ver carga horaria propia',
+  bitacora:        'Gestionar usuarios',
+  usuarios:        'Gestionar usuarios',
+};
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -24,7 +42,6 @@ function App() {
 
   if (!auth) return <Login onLogin={handleLogin} />;
 
-  // Pantalla de cambio de contraseña obligatorio
   if (auth.debe_cambiar_contrasena) {
     return (
       <Dashboard
@@ -35,20 +52,70 @@ function App() {
     );
   }
 
+  // Guard: ¿el usuario tiene permiso para ver la página actual?
+  const permisosSet = new Set(auth.usuario?.permisos ?? []);
+  const esAdmin     = auth.usuario?.rol === 'Administrador';
+
+  const puedeVer = (key) => {
+    const requerido = PERMISOS_PAGINAS[key];
+    return !requerido || esAdmin || permisosSet.has(requerido);
+  };
+
+  // Si intentara acceder a una página no permitida, redirigir al dashboard
+  const paginaActual = puedeVer(page) ? page : 'dashboard';
+
+  // Páginas disponibles — se agregan aquí a medida que se implementen
   const PAGES = {
-    dashboard:   <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
-    bitacora:    <Bitacora />,
-    carreras:    <Carreras />,
-    postulantes: <Postulantes />,
-    bachillerato:<Bachillerato />,
-    inscripcion: <Inscripcion />,
-    usuarios:    <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
+    dashboard:     <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
+    inscripcion:   <Inscripcion />,
+    postulantes:   <Postulantes />,
+    bachillerato:  <Bachillerato />,
+    carreras:      <Carreras />,
+    bitacora:      <Bitacora />,
+    usuarios:      <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
+    // Páginas pendientes de implementar en el frontend:
+    convocatorias: <PaginaPendiente nombre="Gestionar Convocatorias" />,
+    grupos:        <PaginaPendiente nombre="Gestionar Grupos" />,
+    docentes:      <PaginaPendiente nombre="Gestionar Docentes" />,
+    'carga-horaria': <PaginaPendiente nombre="Mi Carga Horaria" />,
+  };
+
+  // setPage con guard incluido
+  const handleSetPage = (key) => {
+    if (puedeVer(key)) setPage(key);
   };
 
   return (
-    <Layout page={page} setPage={setPage} usuario={auth.usuario} onLogout={handleLogout}>
-      {PAGES[page] ?? PAGES.dashboard}
+    <Layout
+      page={paginaActual}
+      setPage={handleSetPage}
+      usuario={auth.usuario}
+      onLogout={handleLogout}
+    >
+      {PAGES[paginaActual] ?? PAGES.dashboard}
     </Layout>
+  );
+}
+
+/** Placeholder para páginas del frontend aún no desarrolladas */
+function PaginaPendiente({ nombre }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', height: '60vh', gap: '1rem', color: '#6b7280'
+    }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+           style={{ width: 56, height: 56, color: '#d1d5db' }}>
+        <path strokeLinecap="round" strokeLinejoin="round"
+          d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
+      </svg>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#374151' }}>
+        {nombre}
+      </h2>
+      <p style={{ fontSize: '0.875rem' }}>
+        Esta sección está en desarrollo. La API ya está disponible.
+      </p>
+    </div>
   );
 }
 
