@@ -3,6 +3,18 @@ import axios from 'axios';
 import './Login.css';
 import client from '../api/client';
 
+/*
+ * ================================================================
+ * Login.jsx — Página de bienvenida y autenticación
+ * ================================================================
+ * CU1  Iniciar Sesión       → modo 'login'         handleLogin()
+ * CU2  Cerrar Sesión        → gestionado en Layout.jsx (logout btn)
+ * CU8  Gestionar Postulantes→ modo 'reg-1'/'reg-2' handleVerificarCI()
+ *                                                   handleCompletarRegistro()
+ * CU9  Info. de Bachillerato→ embebido en reg-2     (campos colegio/egreso/título)
+ * ================================================================
+ */
+
 /* ── Datos estáticos de la página ──────────────────────────── */
 const CARRERAS_STATIC = [
   { nombre: 'Ingeniería de Sistemas', descripcion: 'Análisis, diseño y desarrollo de sistemas de información empresarial, bases de datos, ingeniería de software y arquitecturas cloud.', duracion: '5 años', icon: 'systems', modalidad: 'Virtual y Presencial' },

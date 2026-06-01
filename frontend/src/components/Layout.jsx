@@ -2,6 +2,16 @@ import { useState } from 'react';
 import client from '../api/client';
 import './Layout.css';
 
+/*
+ * ================================================================
+ * Layout.jsx — Shell principal con sidebar y navegación
+ * ================================================================
+ * CU2  Cerrar Sesión     → handleLogout() / botón en sidebar
+ * CU5  Gestionar Permisos→ navVisible filtra ítems según
+ *                          usuario.permisos (asignados en la DB)
+ * ================================================================
+ */
+
 /**
  * NAV: cada ítem tiene un `permiso` requerido.
  * null = visible para cualquier usuario autenticado.

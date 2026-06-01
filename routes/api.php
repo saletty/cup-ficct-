@@ -1,5 +1,37 @@
 <?php
 
+/*
+ |=============================================================
+ | MAPA DE CASOS DE USO — SISTEMA CUP FICCT
+ |=============================================================
+ | CICLO #1 — SEGURIDAD, CONFIGURACIÓN Y GESTIÓN DE POSTULANTES
+ |-------------------------------------------------------------
+ | CU1  Iniciar Sesión              POST   /v1/login
+ | CU2  Cerrar Sesión               POST   /v1/logout
+ | CU3  Gestionar Usuarios          CRUD   /v1/usuarios
+ | CU4  Gestionar Roles             CRUD   /v1/roles
+ | CU5  Gestionar Permisos          GET/POST/DELETE /v1/roles/{rol}/permisos
+ | CU6  Administrar Bitácora        GET    /v1/bitacora
+ | CU7  Gestionar Carreras          CRUD   /v1/carreras
+ | CU8  Gestionar Postulantes       CRUD   /v1/postulantes
+ |      Flujo ventanilla (Paso 1)   POST   /v1/registro/operador
+ |      Flujo web (Paso 2a/2b)      POST   /v1/registro/verificar-ci
+ |                                  POST   /v1/registro/completar
+ | CU9  Información de Bachillerato GET/PUT /v1/postulantes/{ci}/bachillerato
+ | CU10 Registrar Inscripción CUP   GET/POST/PUT /v1/inscripciones
+ |-------------------------------------------------------------
+ | CICLO #2 — GESTIÓN ACADÉMICA
+ |-------------------------------------------------------------
+ | CU11 Gestionar Convocatorias     CRUD   /v1/convocatorias
+ | CU12 Gestionar Docentes          CRUD   /v1/docentes
+ | CU13 Asignar Carga Horaria       GET/POST/DELETE /v1/asignaciones
+ |      Carga horaria propia        GET    /v1/docentes/{ci}/carga-horaria
+ | CU14 Gestionar Grupos            CRUD   /v1/grupos/{id}/{convocatoria_id}
+ |      Administrar Horarios        GET/POST/DELETE /v1/grupos/{id}/{conv}/horarios
+ |      Catálogos de apoyo          CRUD   /v1/aulas  |  /v1/materias
+ |=============================================================
+ */
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AsignacionDocenteController;
 use App\Http\Controllers\AulaController;

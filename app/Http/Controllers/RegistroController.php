@@ -14,13 +14,21 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
-/**
- * RegistroController
- *
- * Gestiona el flujo de registro en dos pasos:
- *   Paso 1 – El operador en ventanilla crea el registro con sólo el CI.
- *   Paso 2 – El estudiante completa sus datos vía la plataforma web pública.
- */
+// ============================================================
+// CU8 — Gestionar Postulantes (flujo transicional en 2 pasos)
+//
+// Paso 1 (ventanilla / Operador):
+//   POST /v1/registro/operador → registrarCI()
+//   El operador registra solo el CI, dejando el usuario INACTIVO
+//   con datos nulos hasta que el estudiante complete en la web.
+//
+// Paso 2 (web pública / Postulante):
+//   POST /v1/registro/verificar-ci → verificarCI()   ← comprueba que el CI fue habilitado
+//   POST /v1/registro/completar    → completar()     ← actualiza datos y activa la cuenta
+//
+// Relacionado con CU9: completar() también graba colegio_procedencia,
+// anio_egreso y titulo_bachiller en la tabla postulante.
+// ============================================================
 class RegistroController extends Controller
 {
     /* ── ENDPOINT PÚBLICO: listado de carreras ─────────────────────────── */
