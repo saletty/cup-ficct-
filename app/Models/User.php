@@ -37,7 +37,6 @@ class User extends Authenticatable
         return [
             'CI'                      => 'integer',
             'rol_id'                  => 'integer',
-            'contraseña'              => 'hashed',
             'intentos_fallidos'       => 'integer',
             'bloqueado_hasta'         => 'datetime',
             'debe_cambiar_contrasena' => 'boolean',
