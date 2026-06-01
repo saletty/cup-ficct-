@@ -7,7 +7,6 @@ use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -130,14 +129,19 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($usuarios as $u) {
-            User::firstOrCreate(
+            // updateOrCreate garantiza que las credenciales son siempre correctas
+            // en cada deploy, incluso si el registro existía con datos incorrectos.
+            // Usamos texto plano: el cast 'hashed' del modelo lo encripta automáticamente.
+            User::updateOrCreate(
                 ['CI' => $u['CI']],
                 [
                     'nombre_completo'         => $u['nombre_completo'],
                     'email'                   => $u['email'],
-                    'contraseña'              => Hash::make($u['password']),
+                    'contraseña'              => $u['password'],   // texto plano → hashed cast
                     'estado'                  => 'ACTIVO',
                     'rol_id'                  => $u['rol']->id,
+                    'intentos_fallidos'       => 0,
+                    'bloqueado_hasta'         => null,
                     'debe_cambiar_contrasena' => false,
                 ]
             );
