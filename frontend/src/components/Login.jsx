@@ -5,10 +5,10 @@ import client from '../api/client';
 
 /* ── Datos estáticos de la página ──────────────────────────── */
 const CARRERAS_STATIC = [
-  { nombre: 'Ingeniería de Sistemas', descripcion: 'Análisis, diseño y desarrollo de sistemas de información empresarial, bases de datos, ingeniería de software y arquitecturas cloud.', duracion: '5 años', icon: 'systems' },
-  { nombre: 'Ingeniería Informática', descripcion: 'Hardware, arquitectura de computadoras, redes e inteligencia artificial para el diseño de infraestructuras tecnológicas completas.', duracion: '5 años', icon: 'informatics' },
-  { nombre: 'Ingeniería en Telecomunicaciones', descripcion: 'Sistemas de comunicación, redes inalámbricas 5G, fibra óptica y tecnologías emergentes para transmisión de datos a nivel nacional e internacional.', duracion: '5 años', icon: 'telecom' },
-  { nombre: 'Ingeniería en Robótica', descripcion: 'Mecatrónica, electrónica e inteligencia artificial para diseñar sistemas autónomos aplicados a industria, medicina y exploración.', duracion: '5 años', icon: 'robotics' },
+  { nombre: 'Ingeniería de Sistemas', descripcion: 'Análisis, diseño y desarrollo de sistemas de información empresarial, bases de datos, ingeniería de software y arquitecturas cloud.', duracion: '5 años', icon: 'systems', modalidad: 'Virtual y Presencial' },
+  { nombre: 'Ingeniería Informática', descripcion: 'Hardware, arquitectura de computadoras, redes e inteligencia artificial para el diseño de infraestructuras tecnológicas completas.', duracion: '5 años', icon: 'informatics', modalidad: 'Virtual y Presencial' },
+  { nombre: 'Ingeniería en Telecomunicaciones', descripcion: 'Sistemas de comunicación, redes inalámbricas 5G, fibra óptica y tecnologías emergentes para transmisión de datos a nivel nacional e internacional.', duracion: '5 años', icon: 'telecom', modalidad: 'Presencial' },
+  { nombre: 'Ingeniería en Robótica', descripcion: 'Mecatrónica, electrónica e inteligencia artificial para diseñar sistemas autónomos aplicados a industria, medicina y exploración.', duracion: '5 años', icon: 'robotics', modalidad: 'Presencial' },
 ];
 
 const MATERIAS = [
@@ -561,7 +561,7 @@ export default function Login({ onLogin }) {
                 <p>{c.descripcion}</p>
                 <div className="lp-career-card__meta">
                   <div className="lp-career-card__meta-item"><span className="lp-career-card__meta-label">Duración</span><span className="lp-career-card__meta-value">{c.duracion}</span></div>
-                  <div className="lp-career-card__meta-item"><span className="lp-career-card__meta-label">Modalidad</span><span className="lp-career-card__meta-value">Presencial</span></div>
+                  <div className="lp-career-card__meta-item"><span className="lp-career-card__meta-label">Modalidad</span><span className="lp-career-card__meta-value">{c.modalidad}</span></div>
                 </div>
               </div>
             ))}
@@ -586,7 +586,7 @@ export default function Login({ onLogin }) {
               <div className="lp-cup-info-card">
                 <h4>Proceso paso a paso</h4>
                 <div className="lp-cup-steps">
-                  {[['Requisitos','Presentar título de bachiller y documentos en ventanilla.'],['Pago','Realizar el pago de inscripción habilitado por la Facultad.'],['Registro','Completar su perfil en esta plataforma usando su CI.'],['Asignación','La Facultad asigna grupos, horarios, aula y docentes.'],['Evaluaciones','3 exámenes por materia: Computación, Matemáticas, Inglés y Física.'],['Resultado','Promedio ≥ 60 pts = APROBADO. Admisión a la carrera elegida.']].map(([t,d],i) => (
+                  {[['Pago','Realizar el pago de inscripción habilitado por la Facultad.'],['Requisitos','Presentar título de bachiller y documentos en ventanilla.'],['Registro','Completar su perfil en esta plataforma usando su CI.'],['Asignación','La Facultad asigna grupos, horarios, aula y docentes.'],['Evaluaciones','3 exámenes por materia: Computación, Matemáticas, Inglés y Física.'],['Resultado','Promedio ≥ 60 pts = APROBADO. Admisión a la carrera elegida.']].map(([t,d],i) => (
                     <div className="lp-cup-step" key={t}>
                       <div className="lp-cup-step__num">{i+1}</div>
                       <div className="lp-cup-step__text"><strong>{t}:</strong> {d}</div>
@@ -632,8 +632,8 @@ export default function Login({ onLogin }) {
             <div className="lp-footer__col">
               <h4>Contacto</h4>
               <ul>
-                <li>Campus UAGRM — Santa Cruz</li><li>Edificio FICCT, 2do piso</li>
-                <li>secretaria@ficct.uagrm.edu.bo</li><li>Lun–Vie: 08:00–18:00</li>
+                <li>Modulos UAGRM — Santa Cruz</li><li>Edificio FICCT, 236</li>
+                <li>secretaria@ficct.uagrm.edu.bo</li><li>Lun–Vie: 08:00–15:00</li>
               </ul>
             </div>
           </div>
