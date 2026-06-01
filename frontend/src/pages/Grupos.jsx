@@ -11,7 +11,7 @@ import './pages.css';
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-const EMPTY_GRP = { id: '', convocatoria_id: '', carrera_id: '', modalidad: 'presencial', cupo_maximo: 30, estado: 'activo' };
+const EMPTY_GRP = { id: '', convocatoria_id: '', cupo_maximo: 30, estado: 'activo' };
 const EMPTY_HOR = { dia: 'Lunes', hora_inicio: '08:00', hora_fin: '10:00', aula_nro: '' };
 const EMPTY_ASIG = { docente_ci: '', materia_id: '', grupo_id: '', convocatoria_id: '' };
 
@@ -87,7 +87,7 @@ export default function Grupos() {
   /* ── CRUD Grupos ───────────────────────────────────────── */
   const abrirCrear  = () => { setFormGrp(EMPTY_GRP); setErrGrp(''); setModalGrp('crear'); };
   const abrirEditar = (g) => {
-    setFormGrp({ id: g.id, convocatoria_id: g.convocatoria_id, carrera_id: g.carrera_id ?? '', modalidad: g.modalidad, cupo_maximo: g.cupo_maximo, estado: g.estado });
+    setFormGrp({ id: g.id, convocatoria_id: g.convocatoria_id, cupo_maximo: g.cupo_maximo, estado: g.estado });
     setErrGrp(''); setModalGrp('editar');
   };
   const cerrarGrp   = () => { setModalGrp(null); setErrGrp(''); };
@@ -397,32 +397,19 @@ export default function Grupos() {
                       </select>
                     </div>
                   </div>
-                  <div className="pg-field">
-                    <label>Carrera</label>
-                    <select value={formGrp.carrera_id} onChange={setG('carrera_id')}>
-                      <option value="">Sin carrera específica</option>
-                      {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre_carrera}</option>)}
-                    </select>
-                  </div>
                   <div className="pg-form-grid pg-form-grid-2">
                     <div className="pg-field">
-                      <label>Modalidad *</label>
-                      <select value={formGrp.modalidad} onChange={setG('modalidad')}>
-                        <option value="presencial">Presencial</option>
-                        <option value="virtual">Virtual</option>
-                      </select>
+                      <label>Cupo Máximo * (máx. 70)</label>
+                      <input type="number" value={formGrp.cupo_maximo} onChange={setG('cupo_maximo')}
+                        min={1} max={70} required />
                     </div>
                     <div className="pg-field">
-                      <label>Cupo Máximo *</label>
-                      <input type="number" value={formGrp.cupo_maximo} onChange={setG('cupo_maximo')} min={1} required />
+                      <label>Estado</label>
+                      <select value={formGrp.estado} onChange={setG('estado')}>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                      </select>
                     </div>
-                  </div>
-                  <div className="pg-field">
-                    <label>Estado</label>
-                    <select value={formGrp.estado} onChange={setG('estado')}>
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                    </select>
                   </div>
                 </div>
               </div>

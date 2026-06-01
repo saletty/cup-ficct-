@@ -57,13 +57,17 @@ class GrupoController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'id'             => ['required', 'string', 'max:10'],
+            'id'              => ['required', 'string', 'max:10'],
             'convocatoria_id' => ['required', 'string', 'exists:convocatoria,id'],
-            'carrera_id'     => ['nullable', 'string', 'exists:carrera,id'],
-            'modalidad'      => ['required', 'in:virtual,presencial'],
-            'cupo_maximo'    => ['required', 'integer', 'min:1'],
-            'estado'         => ['sometimes', 'in:activo,inactivo'],
+            'cupo_maximo'     => ['required', 'integer', 'min:1', 'max:70'],
+            'estado'          => ['sometimes', 'in:activo,inactivo'],
+        ], [
+            'cupo_maximo.max' => 'El cupo máximo por grupo es 70 estudiantes.',
         ]);
+
+        // CUP: grupos son siempre presenciales y sin carrera específica
+        $data['modalidad'] = 'presencial';
+        $data['carrera_id'] = null;
 
         // Verificar que el grupo no exista ya
         if (Grupo::where('id', $data['id'])->where('convocatoria_id', $data['convocatoria_id'])->exists()) {
@@ -88,10 +92,10 @@ class GrupoController extends Controller
             ->firstOrFail();
 
         $data = $request->validate([
-            'carrera_id'  => ['nullable', 'string', 'exists:carrera,id'],
-            'modalidad'   => ['sometimes', 'in:virtual,presencial'],
-            'cupo_maximo' => ['sometimes', 'integer', 'min:1'],
+            'cupo_maximo' => ['sometimes', 'integer', 'min:1', 'max:70'],
             'estado'      => ['sometimes', 'in:activo,inactivo'],
+        ], [
+            'cupo_maximo.max' => 'El cupo máximo por grupo es 70 estudiantes.',
         ]);
 
         $grupo->update($data);
