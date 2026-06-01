@@ -7,6 +7,7 @@ use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -137,7 +138,7 @@ class DatabaseSeeder extends Seeder
                 [
                     'nombre_completo'         => $u['nombre_completo'],
                     'email'                   => $u['email'],
-                    'contraseña'              => $u['password'],   // texto plano → hashed cast
+                    'contraseña'              => Hash::make($u['password']),
                     'estado'                  => 'ACTIVO',
                     'rol_id'                  => $u['rol']->id,
                     'intentos_fallidos'       => 0,
