@@ -16,10 +16,18 @@ return new class extends Migration
     public function up(): void
     {
         /* ── CU11: Ajustar convocatoria ──────────────────────────────── */
+
+        // 1. Primero migrar datos existentes con el valor antiguo
+        DB::table('convocatoria')
+            ->whereNotIn('estado', ['habilitada', 'finalizada'])
+            ->update(['estado' => 'habilitada']);
+
+        // 2. Cambiar el default de la columna
         Schema::table('convocatoria', function (Blueprint $table) {
             $table->string('estado', 20)->default('habilitada')->change();
         });
 
+        // 3. Añadir constraints DESPUÉS de que los datos ya son válidos
         DB::statement("ALTER TABLE convocatoria DROP CONSTRAINT IF EXISTS chk_conv_estados");
         DB::statement("ALTER TABLE convocatoria ADD CONSTRAINT chk_conv_estados
             CHECK (estado IN ('habilitada','finalizada'))");
@@ -27,9 +35,6 @@ return new class extends Migration
         DB::statement("ALTER TABLE convocatoria DROP CONSTRAINT IF EXISTS chk_conv_fechas");
         DB::statement("ALTER TABLE convocatoria ADD CONSTRAINT chk_conv_fechas
             CHECK (fecha_fin > fecha_inicio)");
-
-        // Migrar datos semilla existentes al nuevo estado
-        DB::table('convocatoria')->where('estado', 'activa')->update(['estado' => 'habilitada']);
 
         /* ── CU12: Tabla docente ─────────────────────────────────────── */
         if (! Schema::hasTable('docente')) {
