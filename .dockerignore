@@ -1,0 +1,17 @@
+# Nunca copiar credenciales locales al contenedor
+.env
+.env.*
+!.env.example
+
+# Nunca copiar config cacheada al contenedor (las vars de Render no se aplican si el cache existe)
+bootstrap/cache/config.php
+bootstrap/cache/routes.php
+bootstrap/cache/events.php
+bootstrap/cache/services.php
+
+# Dependencias y archivos de desarrollo
+node_modules
+.git
+.gitignore
+storage/logs/*.log
+*.md

@@ -23,8 +23,7 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -i 's|/var/www/html|${APACHE_DOCUMENT_ROOT}|g' /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite
 
-# Crear script de inicio que corre migraciones antes de arrancar Apache
-RUN echo '#!/bin/bash\nphp artisan migrate --force\napache2-foreground' > /usr/local/bin/start.sh
+COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 EXPOSE 80

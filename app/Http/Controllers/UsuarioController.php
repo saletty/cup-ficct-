@@ -31,7 +31,7 @@ class UsuarioController extends Controller
             'nombre_completo' => $request->nombre_completo,
             'email'          => $request->email,
             'contraseña'     => $request->password, // el cast 'hashed' lo encripta automáticamente
-            'estado'         => $request->estado ?? 'activo',
+            'estado'         => $request->estado ?? 'ACTIVO',
             'rol_id'         => $request->rol_id,
         ]);
 
@@ -85,11 +85,11 @@ class UsuarioController extends Controller
             return response()->json(['mensaje' => 'Usuario no encontrado.'], 404);
         }
 
-        if ($user->estado === 'inactivo') {
+        if ($user->estado === 'INACTIVO') {
             return response()->json(['mensaje' => 'El usuario ya está inactivo.'], 409);
         }
 
-        $user->update(['estado' => 'inactivo']);
+        $user->update(['estado' => 'INACTIVO']);
 
         // Revoca todos sus tokens al desactivar
         $user->tokens()->delete();

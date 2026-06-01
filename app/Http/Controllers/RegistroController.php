@@ -35,17 +35,17 @@ class RegistroController extends Controller
     public function registrarCI(Request $request): JsonResponse
     {
         $request->validate([
-            'CI'     => ['required', 'integer', 'unique:usuario,CI'],
-            'rol_id' => ['required', 'integer', 'exists:rol,id'],
+            'CI' => ['required', 'integer', 'unique:usuario,CI'],
         ], [
-            'CI.unique'    => 'Este CI ya está registrado en el sistema.',
-            'CI.required'  => 'El CI es obligatorio.',
-            'rol_id.exists' => 'El rol seleccionado no existe.',
+            'CI.unique'   => 'Este CI ya está registrado en el sistema.',
+            'CI.required' => 'El CI es obligatorio.',
         ]);
+
+        $rolPostulante = \App\Models\Rol::where('nombre', 'Postulante')->firstOrFail();
 
         $usuario = User::create([
             'CI'     => $request->CI,
-            'rol_id' => $request->rol_id,
+            'rol_id' => $rolPostulante->id,
             'estado' => 'INACTIVO',
         ]);
 

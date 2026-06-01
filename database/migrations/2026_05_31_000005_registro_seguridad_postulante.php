@@ -43,10 +43,12 @@ return new class extends Migration
             });
 
             DB::table('carrera')->insert([
-                ['id' => 'SIS', 'nombre_carrera' => 'Ingeniería de Sistemas'],
-                ['id' => 'INF', 'nombre_carrera' => 'Ingeniería Informática'],
-                ['id' => 'TEL', 'nombre_carrera' => 'Ingeniería en Telecomunicaciones'],
-                ['id' => 'ROB', 'nombre_carrera' => 'Ingeniería en Robótica'],
+                ['id' => 'SIS-V', 'nombre_carrera' => 'Ing. en Sistemas (Virtual)'],
+                ['id' => 'SIS-P', 'nombre_carrera' => 'Ing. en Sistemas (Presencial)'],
+                ['id' => 'INF-V', 'nombre_carrera' => 'Ing. en Informática (Virtual)'],
+                ['id' => 'INF-P', 'nombre_carrera' => 'Ing. en Informática (Presencial)'],
+                ['id' => 'ROB',   'nombre_carrera' => 'Ing. en Robótica (Presencial)'],
+                ['id' => 'NET',   'nombre_carrera' => 'Ing. en Redes y Telecomunicaciones (Presencial)'],
             ]);
         }
 
