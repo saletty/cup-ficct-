@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Carrera;
+use App\Models\Docente;
 use App\Models\Permiso;
+use App\Models\Postulante;
 use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -100,16 +102,16 @@ class DatabaseSeeder extends Seeder
         $usuarios = [
             [
                 'CI'              => 10000001,
-                'nombre_completo' => 'Administrador FICCT',
+                'nombre_completo' => 'Administrador',
                 'email'           => 'admin@ficct.edu.bo',
-                'password'        => 'Admin123',
+                'password'        => 'Admin123!',
                 'rol'             => $admin,
             ],
             [
                 'CI'              => 10000002,
-                'nombre_completo' => 'Coordinador FICCT',
+                'nombre_completo' => 'Coordinador',
                 'email'           => 'coord@ficct.edu.bo',
-                'password'        => 'Coord123',
+                'password'        => 'Coord123!',
                 'rol'             => $coordinador,
             ],
             [
@@ -119,32 +121,94 @@ class DatabaseSeeder extends Seeder
                 'password'        => 'Operador123',
                 'rol'             => $operador,
             ],
+            // Docentes
             [
-                'CI'              => 10000005,
-                'nombre_completo' => 'Docente FICCT',
-                'email'           => 'docente@ficct.edu.bo',
-                'password'        => 'Docente123',
+                'CI'              => 5001001,
+                'nombre_completo' => 'Dr. Carlos Mendoza',
+                'email'           => 'cmendoza@ficct.edu.bo',
+                'password'        => 'Docente123!',
+                'rol'             => $docente,
+            ],
+            [
+                'CI'              => 5001002,
+                'nombre_completo' => 'Mg. Ana Torrico',
+                'email'           => 'atorrico@ficct.edu.bo',
+                'password'        => 'Docente123!',
+                'rol'             => $docente,
+            ],
+            [
+                'CI'              => 5001003,
+                'nombre_completo' => 'Mg. Luis Vaca',
+                'email'           => 'lvaca@ficct.edu.bo',
+                'password'        => 'Docente123!',
+                'rol'             => $docente,
+            ],
+            [
+                'CI'              => 5001004,
+                'nombre_completo' => 'Lic. Sandra Pedraza',
+                'email'           => 'spedraza@ficct.edu.bo',
+                'password'        => 'Docente123!',
                 'rol'             => $docente,
             ],
         ];
 
         foreach ($usuarios as $u) {
-            // updateOrCreate garantiza que las credenciales son siempre correctas
-            // en cada deploy, incluso si el registro existía con datos incorrectos.
-            // Usamos texto plano: el cast 'hashed' del modelo lo encripta automáticamente.
             User::updateOrCreate(
                 ['CI' => $u['CI']],
                 [
                     'nombre_completo'         => $u['nombre_completo'],
                     'email'                   => $u['email'],
                     'contraseña'              => Hash::make($u['password']),
-                    'estado'                  => 'ACTIVO',
+                    'estado'                  => 'activo',
                     'rol_id'                  => $u['rol']->id,
                     'intentos_fallidos'       => 0,
                     'bloqueado_hasta'         => null,
                     'debe_cambiar_contrasena' => false,
                 ]
             );
+        }
+
+        // ── 3b. Perfiles de docente ──────────────────────────────
+        $docentesData = [
+            ['CI' => 5001001, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
+            ['CI' => 5001002, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Gestión de TI',            'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
+            ['CI' => 5001003, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
+            ['CI' => 5001004, 'profesion' => 'Licenciada en Informática','maestria' => 'Maestría en Docencia Universitaria',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
+        ];
+
+        foreach ($docentesData as $d) {
+            Docente::updateOrCreate(['CI' => $d['CI']], $d);
+        }
+
+        // ── 3c. Usuarios postulantes ─────────────────────────────
+        $postulantes = [
+            ['CI' => 8001001, 'nombre_completo' => 'Diego García Mamani',    'email' => 'dgarcia01@gmail.com'],
+            ['CI' => 8001002, 'nombre_completo' => 'Laura Rodríguez Quispe', 'email' => 'lrodriguez02@gmail.com'],
+            ['CI' => 8001003, 'nombre_completo' => 'Miguel Torres Condori',  'email' => 'mtorres03@gmail.com'],
+            ['CI' => 8001004, 'nombre_completo' => 'Sofía Flores Apaza',     'email' => 'sflores04@gmail.com'],
+            ['CI' => 8001005, 'nombre_completo' => 'Carlos López Huanca',    'email' => 'clopez05@gmail.com'],
+            ['CI' => 8001006, 'nombre_completo' => 'Valeria Chávez Copa',    'email' => 'vchavez06@gmail.com'],
+            ['CI' => 8001007, 'nombre_completo' => 'Andrés Mendoza Layme',   'email' => 'amendoza07@gmail.com'],
+            ['CI' => 8001008, 'nombre_completo' => 'Natalia Ríos Calizaya',  'email' => 'nrios08@gmail.com'],
+            ['CI' => 8001009, 'nombre_completo' => 'Roberto Vargas Ticona',  'email' => 'rvargas09@gmail.com'],
+            ['CI' => 8001010, 'nombre_completo' => 'Claudia Morales Marca',  'email' => 'cmorales10@gmail.com'],
+        ];
+
+        foreach ($postulantes as $p) {
+            User::updateOrCreate(
+                ['CI' => $p['CI']],
+                [
+                    'nombre_completo'         => $p['nombre_completo'],
+                    'email'                   => $p['email'],
+                    'contraseña'              => Hash::make('Post123!'),
+                    'estado'                  => 'activo',
+                    'rol_id'                  => $postulante->id,
+                    'intentos_fallidos'       => 0,
+                    'bloqueado_hasta'         => null,
+                    'debe_cambiar_contrasena' => false,
+                ]
+            );
+            Postulante::firstOrCreate(['CI' => $p['CI']]);
         }
 
         // ── 4. Carreras FICCT con modalidades ────────────────────
