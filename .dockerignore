@@ -10,7 +10,9 @@ bootstrap/cache/events.php
 bootstrap/cache/services.php
 
 # Dependencias y archivos de desarrollo
+vendor
 node_modules
+frontend
 .git
 .gitignore
 storage/logs/*.log
