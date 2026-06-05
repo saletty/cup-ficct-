@@ -6,14 +6,16 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_pgsql zip bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Habilitar mod_rewrite para las rutas de Laravel
-RUN a2enmod rewrite
+# Habilitar mod_rewrite y mod_headers para Laravel
+RUN a2enmod rewrite headers
 
-# Apuntar DocumentRoot al public/ de Laravel y habilitar AllowOverride
+# Apuntar DocumentRoot al public/ de Laravel, habilitar AllowOverride y agregar bloque Directory explícito
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
  && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
- && sed -ri -e 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+ && sed -ri -e 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
+ && printf '\n<Directory /var/www/html/public>\n\tOptions Indexes FollowSymLinks\n\tAllowOverride All\n\tRequire all granted\n</Directory>\n' \
+    >> /etc/apache2/sites-available/000-default.conf
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
