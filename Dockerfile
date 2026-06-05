@@ -2,7 +2,7 @@ FROM php:8.2-apache
 
 # Dependencias de sistema + extensiones PHP para Laravel + PostgreSQL
 RUN apt-get update && apt-get install -y \
-    libpq-dev zip unzip curl git \
+    libpq-dev libzip-dev zip unzip curl git \
     && docker-php-ext-install pdo pdo_pgsql zip bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
