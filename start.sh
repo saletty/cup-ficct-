@@ -4,19 +4,20 @@ set -e
 php artisan config:clear
 php artisan route:clear
 
-# Si DATABASE_URL está disponible, parsear host/port/db/user/pass desde él
-# (Railway expone DATABASE_PUBLIC_URL como URL pública accesible desde cualquier red)
-if [[ -n "$DATABASE_URL" ]]; then
-    echo "[start.sh] DATABASE_URL detectado, parseando conexión..."
+# Usar DATABASE_PUBLIC_URL o DATABASE_URL para sobreescribir las vars individuales
+# (railway.internal no resuelve si la red privada no está habilitada)
+_DB_URL="${DATABASE_PUBLIC_URL:-$DATABASE_URL}"
+if [[ -n "$_DB_URL" ]]; then
+    echo "[start.sh] Parseando URL pública de BD..."
     eval $(php -r "
-        \$url = parse_url(getenv('DATABASE_URL'));
+        \$url = parse_url(getenv('DATABASE_PUBLIC_URL') ?: getenv('DATABASE_URL'));
         echo 'export DB_HOST=' . escapeshellarg(\$url['host']) . PHP_EOL;
         echo 'export DB_PORT=' . escapeshellarg(\$url['port'] ?? '5432') . PHP_EOL;
         echo 'export DB_DATABASE=' . escapeshellarg(ltrim(\$url['path'], '/')) . PHP_EOL;
         echo 'export DB_USERNAME=' . escapeshellarg(\$url['user'] ?? '') . PHP_EOL;
         echo 'export DB_PASSWORD=' . escapeshellarg(\$url['pass'] ?? '') . PHP_EOL;
     ")
-    echo "[start.sh] Conexión → host=\$DB_HOST port=\$DB_PORT db=\$DB_DATABASE"
+    echo "[start.sh] Conexión pública → host=${DB_HOST} port=${DB_PORT} db=${DB_DATABASE}"
 fi
 
 echo "[start.sh] DB_HOST='${DB_HOST}'"
