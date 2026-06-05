@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->alias([
             'cambio.contrasena' => \App\Http\Middleware\VerificarCambioContrasena::class,
             'permiso'           => \App\Http\Middleware\CheckPermiso::class,
