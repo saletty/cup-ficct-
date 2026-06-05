@@ -55,6 +55,9 @@ class DatabaseSeeder extends Seeder
             $cajeroRol->delete();
         }
 
+        // Eliminar usuario docente genérico (CI=10000005) reemplazado por docentes reales
+        User::where('CI', 10000005)->delete();
+
         $admin       = Rol::where('nombre', 'Administrador')->first();
         $coordinador = Rol::where('nombre', 'Coordinador')->first();
         $docente     = Rol::where('nombre', 'Docente')->first();
