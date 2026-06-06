@@ -11,6 +11,11 @@ import Convocatorias  from './pages/Convocatorias';
 import Docentes       from './pages/Docentes';
 import Grupos         from './pages/Grupos';
 import CargaHoraria   from './pages/CargaHoraria';
+import TiposPago      from './pages/TiposPago';
+import Pagos          from './pages/Pagos';
+import Examenes       from './pages/Examenes';
+import Evaluaciones   from './pages/Evaluaciones';
+import MisResultados  from './pages/MisResultados';
 
 /*
  * ================================================================
@@ -31,6 +36,11 @@ import CargaHoraria   from './pages/CargaHoraria';
  * CU12 Gestionar Docentes   → page 'docentes'      (pendiente frontend)
  * CU13 Carga Horaria        → page 'carga-horaria' (pendiente frontend)
  * CU14 Gestionar Grupos     → page 'grupos'        (pendiente frontend)
+ * CU15 Tipos de Pago        → page 'tipos-pago'    → <TiposPago>
+ * CU16 Gestionar Pagos      → page 'pagos'         → <Pagos>
+ * CU17 Gestionar Exámenes   → page 'examenes'      → <Examenes>
+ * CU18 Resultados Admisión  → page 'evaluaciones'  → <Evaluaciones>
+ * CU19 Mis Resultados       → page 'mis-resultados'→ <MisResultados>
  * ================================================================
  */
 
@@ -50,6 +60,11 @@ const PERMISOS_PAGINAS = {
   'carga-horaria': 'Ver carga horaria propia',
   bitacora:        'Gestionar usuarios',
   usuarios:        'Gestionar usuarios',
+  'tipos-pago':    'Gestionar tipos de pago',
+  pagos:           'Gestionar pagos',
+  examenes:        'Gestionar exámenes',
+  evaluaciones:    'Gestionar exámenes',
+  'mis-resultados': null,
 };
 
 function App() {
@@ -103,6 +118,11 @@ function App() {
     grupos:          <Grupos />,
     docentes:        <Docentes />,
     'carga-horaria': <CargaHoraria />,
+    'tipos-pago':    <TiposPago />,
+    pagos:           <Pagos />,
+    examenes:        <Examenes />,
+    evaluaciones:    <Evaluaciones />,
+    'mis-resultados': <MisResultados />,
   };
 
   // setPage con guard incluido

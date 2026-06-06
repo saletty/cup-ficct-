@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             'Registrar asistencia',     // Docente: registrar asistencia a clases
             'Ver reportes',             // Coordinador + Cajero: reportes del sistema
             'Registrar notas',          // (reservado — no asignado a ningún rol actualmente)
+            'Gestionar tipos de pago',  // Coordinador: catálogo de aranceles (CU15)
+            'Gestionar pagos',          // Cajero: registrar y validar pagos (CU16)
+            'Gestionar exámenes',       // Coordinador: exámenes y asignaciones (CU17)
         ];
 
         foreach ($permisos as $desc) {
@@ -39,6 +42,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'Administrador', 'descripcion' => 'Acceso completo al sistema'],
             ['nombre' => 'Coordinador',   'descripcion' => 'Gestión académica de grupos y convocatorias'],
             ['nombre' => 'Docente',       'descripcion' => 'Acceso a su carga horaria y registro de asistencia'],
+            ['nombre' => 'Cajero',        'descripcion' => 'Registro y validación de pagos de admisión'],
             ['nombre' => 'Operador',      'descripcion' => 'Registro de postulantes en ventanilla'],
             ['nombre' => 'Postulante',    'descripcion' => 'Estudiante que postula a la FICCT'],
         ];
@@ -47,27 +51,20 @@ class DatabaseSeeder extends Seeder
             Rol::firstOrCreate(['nombre' => $r['nombre']], ['descripcion' => $r['descripcion']]);
         }
 
-        // Eliminar rol Cajero (obsoleto) y su usuario asociado
-        $cajeroRol = Rol::where('nombre', 'Cajero')->first();
-        if ($cajeroRol) {
-            User::where('rol_id', $cajeroRol->id)->delete();
-            $cajeroRol->permisos()->detach();
-            $cajeroRol->delete();
-        }
-
         // Eliminar usuario docente genérico (CI=10000005) reemplazado por docentes reales
         User::where('CI', 10000005)->delete();
 
         $admin       = Rol::where('nombre', 'Administrador')->first();
         $coordinador = Rol::where('nombre', 'Coordinador')->first();
         $docente     = Rol::where('nombre', 'Docente')->first();
+        $cajero      = Rol::where('nombre', 'Cajero')->first();
         $operador    = Rol::where('nombre', 'Operador')->first();
         $postulante  = Rol::where('nombre', 'Postulante')->first();
 
         // Administrador: todos los permisos
         $admin->permisos()->sync(Permiso::pluck('id'));
 
-        // Coordinador: gestión académica completa
+        // Coordinador: gestión académica + aranceles + exámenes + notas
         $coordinador->permisos()->sync(
             Permiso::whereIn('descripcion', [
                 'Ver dashboard',
@@ -76,6 +73,9 @@ class DatabaseSeeder extends Seeder
                 'Gestionar grupos',
                 'Gestionar docentes',
                 'Gestionar postulantes',
+                'Gestionar tipos de pago',
+                'Gestionar exámenes',
+                'Registrar notas',
                 'Ver reportes',
             ])->pluck('id')
         );
@@ -86,6 +86,16 @@ class DatabaseSeeder extends Seeder
                 'Ver dashboard',
                 'Ver carga horaria propia',
                 'Registrar asistencia',
+            ])->pluck('id')
+        );
+
+        // Cajero: dashboard, postulantes (consulta), pagos
+        $cajero->permisos()->sync(
+            Permiso::whereIn('descripcion', [
+                'Ver dashboard',
+                'Gestionar postulantes',
+                'Gestionar pagos',
+                'Ver reportes',
             ])->pluck('id')
         );
 
@@ -123,6 +133,13 @@ class DatabaseSeeder extends Seeder
                 'email'           => 'operador@ficct.edu.bo',
                 'password'        => 'Operador123',
                 'rol'             => $operador,
+            ],
+            [
+                'CI'              => 10000004,
+                'nombre_completo' => 'Cajero FICCT',
+                'email'           => 'cajero@ficct.edu.bo',
+                'password'        => 'Cajero123!',
+                'rol'             => $cajero,
             ],
             // Docentes
             [

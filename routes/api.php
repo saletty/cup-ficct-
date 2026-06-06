@@ -29,6 +29,24 @@
  | CU14 Gestionar Grupos            CRUD   /v1/grupos/{id}/{convocatoria_id}
  |      Administrar Horarios        GET/POST/DELETE /v1/grupos/{id}/{conv}/horarios
  |      Catálogos de apoyo          CRUD   /v1/aulas  |  /v1/materias
+ |-------------------------------------------------------------
+ | CICLO #3 — PAGOS
+ |-------------------------------------------------------------
+ | CU15 Gestionar Tipos de Pago    CRUD   /v1/tipos-pago
+ | CU16 Gestionar Pagos Admisión   CRUD   /v1/pagos
+ |      Historial por postulante   GET    /v1/pagos/postulante/{ci}
+ |-------------------------------------------------------------
+ | CICLO #4 — EXÁMENES Y RESULTADOS
+ |-------------------------------------------------------------
+ | CU17 Gestionar Exámenes         CRUD   /v1/examenes
+ |      Publicar examen            POST   /v1/examenes/{id}/publicar
+ |      Ver asignaciones           GET    /v1/examenes/{id}/asignaciones
+ |      Asignar postulante         POST   /v1/examenes/{id}/asignaciones
+ |      Auto-distribuir            POST   /v1/examenes/{id}/asignaciones/auto
+ |      Quitar asignación          DELETE /v1/examenes/{id}/asignaciones/{asignId}
+ | CU18 Gestionar Evaluaciones     CRUD   /v1/evaluaciones
+ |      Por postulante (staff)     GET    /v1/evaluaciones/postulante/{ci}
+ | CU19 Mis Resultados (post.)     GET    /v1/mis-resultados
  |=============================================================
  */
 
@@ -43,11 +61,15 @@ use App\Http\Controllers\DocenteController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\ExamenAdmisionController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PostulanteController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\PermisoController;
+use App\Http\Controllers\TipoPagoController;
 use App\Http\Controllers\UsuarioController;
 
 /* ============================================================
@@ -154,4 +176,54 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
 
     /* ── Ver reportes: Coordinador y Cajero ── */
     // Route::get('/reportes', ...)->middleware('permiso:Ver reportes');
+
+    /* ── CU15: Tipos de pago ── */
+    // GET disponible también para Cajero (necesita el catálogo al registrar pagos)
+    Route::get('/tipos-pago',          [TipoPagoController::class, 'index'])
+        ->middleware('permiso:Gestionar tipos de pago,Gestionar pagos');
+    Route::get('/tipos-pago/{id}',     [TipoPagoController::class, 'show'])
+        ->middleware('permiso:Gestionar tipos de pago,Gestionar pagos');
+    Route::middleware('permiso:Gestionar tipos de pago')->group(function () {
+        Route::post('/tipos-pago',         [TipoPagoController::class, 'store']);
+        Route::put('/tipos-pago/{id}',     [TipoPagoController::class, 'update']);
+        Route::delete('/tipos-pago/{id}',  [TipoPagoController::class, 'destroy']);
+    });
+
+    /* ── CU16: Pagos de admisión ── */
+    Route::middleware('permiso:Gestionar pagos')->group(function () {
+        Route::get('/pagos',                      [PagoController::class, 'index']);
+        Route::post('/pagos',                     [PagoController::class, 'store']);
+        Route::get('/pagos/{id}',                 [PagoController::class, 'show']);
+        Route::put('/pagos/{id}',                 [PagoController::class, 'update']);
+        Route::delete('/pagos/{id}',              [PagoController::class, 'destroy']);
+        Route::get('/pagos/postulante/{ci}',      [PagoController::class, 'porPostulante']);
+    });
+
+    /* ── CU17: Exámenes de admisión ── */
+    Route::middleware('permiso:Gestionar exámenes')->group(function () {
+        Route::get('/examenes',                                     [ExamenAdmisionController::class, 'index']);
+        Route::post('/examenes',                                    [ExamenAdmisionController::class, 'store']);
+        Route::get('/examenes/{id}',                                [ExamenAdmisionController::class, 'show']);
+        Route::put('/examenes/{id}',                                [ExamenAdmisionController::class, 'update']);
+        Route::delete('/examenes/{id}',                             [ExamenAdmisionController::class, 'destroy']);
+        Route::post('/examenes/{id}/publicar',                      [ExamenAdmisionController::class, 'publicar']);
+        Route::get('/examenes/{id}/asignaciones',                   [ExamenAdmisionController::class, 'asignaciones']);
+        Route::post('/examenes/{id}/asignaciones',                  [ExamenAdmisionController::class, 'asignar']);
+        Route::post('/examenes/{id}/asignaciones/auto',             [ExamenAdmisionController::class, 'autoAsignar']);
+        Route::delete('/examenes/{id}/asignaciones/{asignId}',      [ExamenAdmisionController::class, 'quitarAsignacion']);
+    });
+
+    /* ── CU18: Evaluaciones (Coordinador) ── */
+    Route::middleware('permiso:Gestionar exámenes')->group(function () {
+        Route::get('/evaluaciones',                     [EvaluacionController::class, 'index']);
+        Route::post('/evaluaciones',                    [EvaluacionController::class, 'store']);
+        Route::get('/evaluaciones/{id}',                [EvaluacionController::class, 'show']);
+        Route::put('/evaluaciones/{id}',                [EvaluacionController::class, 'update']);
+        Route::delete('/evaluaciones/{id}',             [EvaluacionController::class, 'destroy']);
+        Route::get('/evaluaciones/postulante/{ci}',     [EvaluacionController::class, 'porPostulante']);
+    });
+
+    /* ── CU19: Mis resultados (cualquier postulante autenticado) ── */
+    Route::get('/mis-resultados', [EvaluacionController::class, 'misResultados']);
+    Route::get('/mi-examen',      [ExamenAdmisionController::class, 'miExamen']);
 });

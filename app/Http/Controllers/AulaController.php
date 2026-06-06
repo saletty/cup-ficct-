@@ -17,12 +17,16 @@ class AulaController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'nro'        => ['required', 'string', 'max:10', 'unique:aula,nro'],
-            'capacidad'  => ['required', 'integer', 'min:1'],
+            'nro'         => ['required', 'string', 'max:10', 'unique:aula,nro'],
+            'capacidad'   => ['required', 'integer', 'min:1'],
             'descripcion' => ['nullable', 'string', 'max:150'],
+            'estado'      => ['sometimes', 'in:activo,inactivo'],
         ], [
-            'nro.unique' => 'Ya existe un aula con ese número.',
+            'nro.unique'      => 'Ya existe un aula con ese número.',
+            'capacidad.min'   => 'La capacidad debe ser un entero positivo mayor a cero.',
         ]);
+
+        $data['estado'] ??= 'activo';
 
         $aula = Aula::create($data);
         BitacoraService::log("Aula creada: {$aula->nro}");
@@ -42,6 +46,9 @@ class AulaController extends Controller
         $data = $request->validate([
             'capacidad'   => ['sometimes', 'integer', 'min:1'],
             'descripcion' => ['nullable', 'string', 'max:150'],
+            'estado'      => ['sometimes', 'in:activo,inactivo'],
+        ], [
+            'capacidad.min' => 'La capacidad debe ser un entero positivo mayor a cero.',
         ]);
 
         $aula->update($data);
@@ -54,8 +61,8 @@ class AulaController extends Controller
     {
         $aula = Aula::findOrFail($nro);
 
-        if ($aula->horarios()->exists()) {
-            return response()->json(['mensaje' => 'No se puede eliminar: el aula tiene horarios asignados.'], 409);
+        if ($aula->horarios()->exists() || $aula->asignacionesExamen()->exists()) {
+            return response()->json(['mensaje' => 'No se puede eliminar: el aula tiene horarios o asignaciones de examen.'], 409);
         }
 
         BitacoraService::log("Aula eliminada: {$nro}");

@@ -12,10 +12,15 @@ class Aula extends Model
     protected $keyType    = 'string';
     public    $timestamps = false;
 
-    protected $fillable = ['nro', 'capacidad', 'descripcion'];
+    protected $fillable = ['nro', 'capacidad', 'descripcion', 'estado'];
 
     public function horarios()
     {
         return $this->hasMany(Horario::class, 'aula_nro', 'nro');
+    }
+
+    public function asignacionesExamen()
+    {
+        return $this->hasMany(AsignacionExamen::class, 'aula_nro', 'nro');
     }
 }
