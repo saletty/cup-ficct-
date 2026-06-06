@@ -89,4 +89,9 @@ php artisan migrate --force
 # Seed no-fatal: si ya hay datos o falla por otro motivo, Apache igual arranca
 php artisan db:seed --force || echo "[start.sh] ADVERTENCIA: seed falló, continuando..."
 
+# --- SOLUCCIÓN AL MPM ERROR ---
+# Forzar la desactivación justo antes del inicio definitivo
+a2dismod mpm_event mpm_worker || true
+a2enmod mpm_prefork || true
+
 exec apache2-foreground
