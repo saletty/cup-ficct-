@@ -49,11 +49,13 @@
  |      Por postulante (staff)     GET    /v1/evaluaciones/postulante/{ci}
  | CU19 Mis Resultados (post.)     GET    /v1/mis-resultados
  | CU21 Dashboard Administrativo  GET    /v1/dashboard/stats
+ | CU22 Reportes Estadísticos    GET    /v1/reportes/{postulantes|estadisticas|docentes}
  |=============================================================
  */
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AsignacionDocenteController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\AuthController;
@@ -233,4 +235,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
 
     /* ── CU21: Dashboard estadístico (cualquier usuario autenticado) ── */
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+
+    /* ── CU22: Reportes estadísticos ── */
+    Route::middleware('permiso:Ver reportes')->group(function () {
+        Route::get('/reportes/postulantes',  [ReporteController::class, 'postulantes']);
+        Route::get('/reportes/estadisticas', [ReporteController::class, 'estadisticas']);
+        Route::get('/reportes/docentes',     [ReporteController::class, 'docentes']);
+    });
 });

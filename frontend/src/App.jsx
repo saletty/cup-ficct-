@@ -17,6 +17,7 @@ import Examenes       from './pages/Examenes';
 import Evaluaciones   from './pages/Evaluaciones';
 import MisResultados  from './pages/MisResultados';
 import DashboardAdmin from './pages/DashboardAdmin';
+import Reportes       from './pages/Reportes';
 
 /*
  * ================================================================
@@ -66,6 +67,7 @@ const PERMISOS_PAGINAS = {
   examenes:        'Gestionar exámenes',
   evaluaciones:    'Gestionar exámenes',
   'mis-resultados': null,
+  reportes:         'Ver reportes',
 };
 
 function App() {
@@ -124,6 +126,7 @@ function App() {
     examenes:        <Examenes />,
     evaluaciones:    <Evaluaciones />,
     'mis-resultados': <MisResultados />,
+    reportes:         <Reportes />,
   };
 
   // setPage con guard incluido
