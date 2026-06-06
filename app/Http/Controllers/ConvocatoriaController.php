@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Convocatoria;
+use App\Models\Postulacion;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 // ============================================================
 class ConvocatoriaController extends Controller
 {
+    private const LIMITE_POR_GRUPO = 70;
+
     public function index(): JsonResponse
     {
         return response()->json(
@@ -88,5 +91,31 @@ class ConvocatoriaController extends Controller
         $conv->delete();
 
         return response()->json(['mensaje' => 'Convocatoria eliminada.']);
+    }
+
+    // CU20 — Calcular Cantidad de Grupos (Algoritmo Techo: CEIL / 70)
+    public function calcularGrupos(string $id): JsonResponse
+    {
+        $convocatoria = Convocatoria::findOrFail($id);
+
+        // Postulaciones confirmadas = todas excepto las anuladas
+        $totalInscritos = Postulacion::where('convocatoria_id', $id)
+            ->whereNotIn('estado_admision', ['anulado'])
+            ->count();
+
+        $limite           = self::LIMITE_POR_GRUPO;
+        $gruposNecesarios = $totalInscritos === 0 ? 0 : (int) ceil($totalInscritos / $limite);
+
+        BitacoraService::log(
+            "CU20 cálculo de grupos — convocatoria {$id}: {$totalInscritos} inscritos → {$gruposNecesarios} grupo(s)"
+        );
+
+        return response()->json([
+            'convocatoria'      => $convocatoria->only('id', 'nombre', 'estado'),
+            'total_inscritos'   => $totalInscritos,
+            'limite_por_grupo'  => $limite,
+            'grupos_necesarios' => $gruposNecesarios,
+            'formula'           => "CEIL({$totalInscritos} / {$limite}) = {$gruposNecesarios}",
+        ]);
     }
 }

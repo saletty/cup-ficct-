@@ -23,6 +23,7 @@
  | CICLO #2 — GESTIÓN ACADÉMICA
  |-------------------------------------------------------------
  | CU11 Gestionar Convocatorias     CRUD   /v1/convocatorias
+ | CU20 Calcular Grupos (CEIL/70)  GET    /v1/convocatorias/{id}/calcular-grupos
  | CU12 Gestionar Docentes          CRUD   /v1/docentes
  | CU13 Asignar Carga Horaria       GET/POST/DELETE /v1/asignaciones
  |      Carga horaria propia        GET    /v1/docentes/{ci}/carga-horaria
@@ -113,9 +114,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::apiResource('carreras', CarreraController::class);
     });
 
-    /* ── Coordinador: convocatorias (CU11) ── */
+    /* ── Coordinador: convocatorias (CU11) + cálculo de grupos (CU20) ── */
     Route::middleware('permiso:Gestionar convocatorias')->group(function () {
         Route::apiResource('convocatorias', ConvocatoriaController::class);
+        Route::get('/convocatorias/{id}/calcular-grupos', [ConvocatoriaController::class, 'calcularGrupos']);
     });
 
     /* ── Coordinador: grupos y horarios (CU14) ── */
