@@ -48,10 +48,12 @@
  | CU18 Gestionar Evaluaciones     CRUD   /v1/evaluaciones
  |      Por postulante (staff)     GET    /v1/evaluaciones/postulante/{ci}
  | CU19 Mis Resultados (post.)     GET    /v1/mis-resultados
+ | CU21 Dashboard Administrativo  GET    /v1/dashboard/stats
  |=============================================================
  */
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AsignacionDocenteController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\AuthController;
@@ -228,4 +230,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
     /* ── CU19: Mis resultados (cualquier postulante autenticado) ── */
     Route::get('/mis-resultados', [EvaluacionController::class, 'misResultados']);
     Route::get('/mi-examen',      [ExamenAdmisionController::class, 'miExamen']);
+
+    /* ── CU21: Dashboard estadístico (cualquier usuario autenticado) ── */
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 });

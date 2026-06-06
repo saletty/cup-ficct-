@@ -16,6 +16,7 @@ import Pagos          from './pages/Pagos';
 import Examenes       from './pages/Examenes';
 import Evaluaciones   from './pages/Evaluaciones';
 import MisResultados  from './pages/MisResultados';
+import DashboardAdmin from './pages/DashboardAdmin';
 
 /*
  * ================================================================
@@ -107,7 +108,7 @@ function App() {
 
   // Páginas disponibles — se agregan aquí a medida que se implementen
   const PAGES = {
-    dashboard:     <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
+    dashboard:     <DashboardAdmin />,
     inscripcion:   <Inscripcion />,
     postulantes:   <Postulantes />,
     bachillerato:  <Bachillerato />,
