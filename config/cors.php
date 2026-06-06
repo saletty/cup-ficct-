@@ -23,6 +23,7 @@ return [
         'https://cup-ficct-mocha.vercel.app',
         'https://cup-ficct-oldsoqvjk-salettys-projects.vercel.app',
         'https://cup-ficct-leps9wjz6-salettys-projects.vercel.app',
+        'https://cup-ficct-un77.onrender.com',
         'http://localhost:5173',
     ],
 
