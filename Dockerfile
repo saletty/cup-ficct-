@@ -6,8 +6,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_pgsql zip bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Habilitar mod_rewrite (rutas Laravel) y mod_headers (CORS a nivel Apache)
-RUN a2enmod rewrite headers
+# Habilitar mod_rewrite y mod_headers; desactivar MPMs extra para evitar conflicto
+RUN a2dismod mpm_event mpm_worker 2>/dev/null; \
+    a2enmod mpm_prefork rewrite headers
 
 # Reemplazar el VirtualHost por defecto con config limpia:
 # - DocumentRoot apunta a public/
