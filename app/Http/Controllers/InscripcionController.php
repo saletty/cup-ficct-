@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AsignacionDocente;
 use App\Models\Convocatoria;
+use App\Models\Grupo;
+use App\Models\Horario;
 use App\Models\Postulacion;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
@@ -102,6 +105,78 @@ class InscripcionController extends Controller
             'mensaje'     => 'Inscripción registrada correctamente.',
             'inscripcion' => $inscripcion->load('convocatoria', 'carreraOpcion1', 'carreraOpcion2'),
         ], 201);
+    }
+
+    /* ── Horarios del grupo del postulante autenticado (CU22 - Mi Horario) ── */
+    public function misHorarios(): JsonResponse
+    {
+        $ci = auth()->user()->getKey();
+
+        $inscripcion = Postulacion::with([
+            'convocatoria:id,nombre,estado',
+            'carreraOpcion1:id,nombre_carrera',
+        ])
+        ->where('postulante_ci', $ci)
+        ->whereNotIn('estado_admision', ['anulado'])
+        ->latest('fecha_registro')
+        ->first();
+
+        if (! $inscripcion) {
+            return response()->json(['inscripcion' => null, 'grupos' => []]);
+        }
+
+        $convId = $inscripcion->convocatoria_id;
+
+        $grupos = Grupo::with(['carrera:id,nombre_carrera'])
+            ->where('convocatoria_id', $convId)
+            ->where('estado', 'activo')
+            ->get();
+
+        $grupoIds = $grupos->pluck('id');
+
+        $horariosPorGrupo = Horario::with(['aula:nro,descripcion'])
+            ->where('convocatoria_id', $convId)
+            ->whereIn('grupo_id', $grupoIds)
+            ->orderBy('grupo_id')
+            ->orderBy('dia')
+            ->orderBy('hora_inicio')
+            ->get()
+            ->groupBy('grupo_id');
+
+        $docentesPorGrupo = AsignacionDocente::with(['docente.usuario:CI,nombre_completo', 'materia:id,nombre'])
+            ->where('convocatoria_id', $convId)
+            ->whereIn('grupo_id', $grupoIds)
+            ->get()
+            ->groupBy('grupo_id');
+
+        $gruposData = $grupos->map(function ($g) use ($horariosPorGrupo, $docentesPorGrupo) {
+            return [
+                'id'          => $g->id,
+                'carrera'     => $g->carrera?->nombre_carrera ?? '—',
+                'modalidad'   => $g->modalidad,
+                'cupo_maximo' => $g->cupo_maximo,
+                'horarios'    => $horariosPorGrupo->get($g->id, collect())->map(fn($h) => [
+                    'dia'        => $h->dia,
+                    'hora_inicio'=> $h->hora_inicio,
+                    'hora_fin'   => $h->hora_fin,
+                    'aula_nro'   => $h->aula_nro,
+                    'aula_desc'  => $h->aula?->descripcion ?? '',
+                ])->values(),
+                'docentes'    => $docentesPorGrupo->get($g->id, collect())->map(fn($a) => [
+                    'nombre'  => $a->docente?->usuario?->nombre_completo ?? '—',
+                    'materia' => $a->materia?->nombre ?? '—',
+                ])->values(),
+            ];
+        });
+
+        return response()->json([
+            'inscripcion' => [
+                'convocatoria'    => $inscripcion->convocatoria,
+                'carrera'         => $inscripcion->carreraOpcion1,
+                'estado_admision' => $inscripcion->estado_admision,
+            ],
+            'grupos' => $gruposData,
+        ]);
     }
 
     /* ── Cancelar / cambiar estado de inscripción ───────────── */

@@ -16,8 +16,11 @@ import Pagos          from './pages/Pagos';
 import Examenes       from './pages/Examenes';
 import Evaluaciones   from './pages/Evaluaciones';
 import MisResultados  from './pages/MisResultados';
-import DashboardAdmin from './pages/DashboardAdmin';
-import Reportes       from './pages/Reportes';
+import DashboardAdmin        from './pages/DashboardAdmin';
+import DashboardPostulante   from './pages/DashboardPostulante';
+import Reportes              from './pages/Reportes';
+import MiInscripcionPostulante from './pages/MiInscripcionPostulante';
+import MisHorarios           from './pages/MisHorarios';
 
 /*
  * ================================================================
@@ -67,6 +70,7 @@ const PERMISOS_PAGINAS = {
   examenes:        'Gestionar exámenes',
   evaluaciones:    'Gestionar exámenes',
   'mis-resultados': null,
+  'mis-horarios':   null,
   reportes:         'Ver reportes',
 };
 
@@ -97,8 +101,9 @@ function App() {
   }
 
   // Guard: ¿el usuario tiene permiso para ver la página actual?
-  const permisosSet = new Set(auth.usuario?.permisos ?? []);
-  const esAdmin     = auth.usuario?.rol === 'Administrador';
+  const permisosSet  = new Set(auth.usuario?.permisos ?? []);
+  const esAdmin      = auth.usuario?.rol === 'Administrador';
+  const esPostulante = auth.usuario?.rol === 'Postulante';
 
   const puedeVer = (key) => {
     const requerido = PERMISOS_PAGINAS[key];
@@ -110,8 +115,8 @@ function App() {
 
   // Páginas disponibles — se agregan aquí a medida que se implementen
   const PAGES = {
-    dashboard:     <DashboardAdmin />,
-    inscripcion:   <Inscripcion />,
+    dashboard:     esPostulante ? <DashboardPostulante usuario={auth.usuario} /> : <DashboardAdmin />,
+    inscripcion:   esPostulante ? <MiInscripcionPostulante usuario={auth.usuario} /> : <Inscripcion />,
     postulantes:   <Postulantes />,
     bachillerato:  <Bachillerato />,
     carreras:      <Carreras />,
@@ -126,6 +131,7 @@ function App() {
     examenes:        <Examenes />,
     evaluaciones:    <Evaluaciones />,
     'mis-resultados': <MisResultados />,
+    'mis-horarios':   <MisHorarios />,
     reportes:         <Reportes />,
   };
 

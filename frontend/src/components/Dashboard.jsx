@@ -6,21 +6,49 @@ const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`,
 });
 
+/* ── Indicador en tiempo real de requisitos ──────────────────── */
+function PwdReqs({ pwd }) {
+  const checks = [
+    { label: 'Mínimo 8 caracteres',          ok: pwd.length >= 8 },
+    { label: 'Al menos una mayúscula (A–Z)',  ok: /[A-Z]/.test(pwd) },
+    { label: 'Al menos una minúscula (a–z)',  ok: /[a-z]/.test(pwd) },
+    { label: 'Al menos un número (0–9)',      ok: /[0-9]/.test(pwd) },
+    { label: 'Un carácter especial (@$!%*?&-)', ok: /[\W_]/.test(pwd) },
+  ];
+  if (!pwd) return null;
+  return (
+    <div style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:5, padding:'10px 12px', marginBottom:'0.75rem' }}>
+      {checks.map(c => (
+        <div key={c.label} style={{ display:'flex', alignItems:'center', gap:7, fontSize:'0.73rem', color: c.ok ? '#15803d' : '#6b7280', marginBottom:3 }}>
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={c.ok ? '#16a34a' : '#d1d5db'} strokeWidth={3} strokeLinecap="round">
+            {c.ok ? <polyline points="20 6 9 17 4 12"/> : <circle cx={12} cy={12} r={10}/>}
+          </svg>
+          {c.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Sub-pantalla: Cambio de contraseña obligatorio ─────────── */
 function CambioContrasenaObligatorio({ usuario, onCambiado, onLogout }) {
   const [form, setForm] = useState({ password_actual: '', password_nueva: '', password_nueva_confirmation: '' });
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPwd, setShowPwd] = useState(false);
 
-  const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    setFieldErrors(p => ({ ...p, [e.target.name]: null, _general: null }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password_nueva !== form.password_nueva_confirmation) {
-      setError('Las contraseñas nuevas no coinciden.'); return;
+      setFieldErrors({ password_nueva_confirmation: 'Las contraseñas nuevas no coinciden.' });
+      return;
     }
-    setLoading(true); setError('');
+    setLoading(true); setFieldErrors({});
     try {
       await client.post(`/password/cambiar`, form, { headers: authHeader() });
       const u = JSON.parse(localStorage.getItem('usuario') || '{}');
@@ -28,16 +56,28 @@ function CambioContrasenaObligatorio({ usuario, onCambiado, onLogout }) {
       localStorage.setItem('usuario', JSON.stringify(u));
       onCambiado();
     } catch (err) {
-      setError(err.response?.data?.mensaje || 'Error al cambiar la contraseña.');
+      const d = err.response?.data;
+      if (d?.errors) {
+        const mapped = {};
+        Object.entries(d.errors).forEach(([k, msgs]) => { mapped[k] = msgs[0]; });
+        setFieldErrors(mapped);
+      } else {
+        setFieldErrors({ _general: d?.mensaje || 'Error al cambiar la contraseña.' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const inp = (field) => ({
+    width:'100%', padding:'11px 14px', boxSizing:'border-box', fontSize:'0.92rem', outline:'none',
+    border: fieldErrors[field] ? '1.5px solid #dc2626' : '1.5px solid #e0e0e0', borderRadius:4,
+  });
+
   return (
     <div style={{ minHeight:'100vh', background:'#f0f4f9', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
-      <div style={{ background:'#fff', borderRadius:8, boxShadow:'0 8px 40px rgba(0,75,141,0.15)', width:'100%', maxWidth:440, overflow:'hidden' }}>
-        <div style={{ background:'#004B8D', padding:'1.5rem 2rem', color:'#fff', position:'relative' }}>
+      <div style={{ background:'#fff', borderRadius:8, boxShadow:'0 8px 40px rgba(0,75,141,0.15)', width:'100%', maxWidth:460, overflow:'hidden' }}>
+        <div style={{ background:'#004B8D', padding:'1.5rem 2rem', color:'#fff' }}>
           <div style={{ background:'rgba(255,255,255,0.15)', borderRadius:8, width:42, height:42, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:'0.75rem' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
@@ -45,20 +85,54 @@ function CambioContrasenaObligatorio({ usuario, onCambiado, onLogout }) {
           <p style={{ fontSize:'0.78rem', color:'rgba(255,255,255,0.75)', marginTop:4 }}>Por seguridad, debe crear una nueva contraseña antes de continuar.</p>
         </div>
         <div style={{ padding:'1.75rem 2rem' }}>
-          {error && <div style={{ background:'#fff3f5', border:'1px solid rgba(139,0,0,0.2)', borderRadius:5, padding:'10px 14px', fontSize:'0.82rem', color:'#8b0000', marginBottom:'1rem' }}>{error}</div>}
+          {fieldErrors._general && (
+            <div style={{ background:'#fff3f5', border:'1px solid rgba(220,38,38,0.25)', borderRadius:5, padding:'10px 14px', fontSize:'0.82rem', color:'#b91c1c', marginBottom:'1rem' }}>
+              {fieldErrors._general}
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
-            {[
-              { name:'password_actual',           label:'Contraseña temporal (recibida por correo)', ph:'Ingrese la contraseña temporal' },
-              { name:'password_nueva',             label:'Nueva contraseña *',                         ph:'Mínimo 8 caracteres' },
-              { name:'password_nueva_confirmation', label:'Confirmar nueva contraseña *',               ph:'Repita la nueva contraseña' },
-            ].map(f => (
-              <div key={f.name} style={{ marginBottom:'1rem' }}>
-                <label style={{ display:'block', fontSize:'0.73rem', fontWeight:700, color:'#444', letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>{f.label}</label>
-                <input name={f.name} type={showPwd ? 'text' : 'password'} placeholder={f.ph}
-                  value={form[f.name]} onChange={handleChange} required
-                  style={{ width:'100%', padding:'11px 14px', border:'1.5px solid #e0e0e0', borderRadius:4, fontSize:'0.92rem', outline:'none', boxSizing:'border-box' }} />
-              </div>
-            ))}
+
+            {/* Contraseña actual */}
+            <div style={{ marginBottom:'1rem' }}>
+              <label style={{ display:'block', fontSize:'0.73rem', fontWeight:700, color:'#444', letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>
+                Contraseña temporal (recibida por correo)
+              </label>
+              <input name="password_actual" type={showPwd ? 'text' : 'password'}
+                placeholder="Ingrese la contraseña temporal"
+                value={form.password_actual} onChange={handleChange} required style={inp('password_actual')} />
+              {fieldErrors.password_actual && (
+                <p style={{ fontSize:'0.72rem', color:'#dc2626', marginTop:3 }}>{fieldErrors.password_actual}</p>
+              )}
+            </div>
+
+            {/* Nueva contraseña */}
+            <div style={{ marginBottom:'0.4rem' }}>
+              <label style={{ display:'block', fontSize:'0.73rem', fontWeight:700, color:'#444', letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>
+                Nueva contraseña *
+              </label>
+              <input name="password_nueva" type={showPwd ? 'text' : 'password'}
+                placeholder="Ej: MiClave@2026"
+                value={form.password_nueva} onChange={handleChange} required style={inp('password_nueva')} />
+              {fieldErrors.password_nueva && (
+                <p style={{ fontSize:'0.72rem', color:'#dc2626', marginTop:3 }}>{fieldErrors.password_nueva}</p>
+              )}
+            </div>
+
+            <PwdReqs pwd={form.password_nueva} />
+
+            {/* Confirmar contraseña */}
+            <div style={{ marginBottom:'1rem' }}>
+              <label style={{ display:'block', fontSize:'0.73rem', fontWeight:700, color:'#444', letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>
+                Confirmar nueva contraseña *
+              </label>
+              <input name="password_nueva_confirmation" type={showPwd ? 'text' : 'password'}
+                placeholder="Repita la nueva contraseña"
+                value={form.password_nueva_confirmation} onChange={handleChange} required style={inp('password_nueva_confirmation')} />
+              {fieldErrors.password_nueva_confirmation && (
+                <p style={{ fontSize:'0.72rem', color:'#dc2626', marginTop:3 }}>{fieldErrors.password_nueva_confirmation}</p>
+              )}
+            </div>
+
             <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:'0.78rem', color:'#6b6b6b', marginBottom:'1.25rem', cursor:'pointer' }}>
               <input type="checkbox" onChange={() => setShowPwd(p => !p)} /> Mostrar contraseñas
             </label>

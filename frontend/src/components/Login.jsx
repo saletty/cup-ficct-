@@ -44,6 +44,104 @@ const icons = {
   eyeOff:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>,
 };
 
+/* ── Selector de carrera con colores por modalidad ──────────── */
+function getModalidad(nombre) {
+  if (!nombre) return null;
+  if (nombre.toLowerCase().includes('virtual'))    return 'virtual';
+  if (nombre.toLowerCase().includes('presencial')) return 'presencial';
+  return null;
+}
+
+function CarreraSelect({ id, name, value, onChange, opciones, placeholder, excluir }) {
+  const [open, setOpen] = useState(false);
+  // Deduplicar por nombre exacto
+  const unique = opciones.filter((c, i, arr) =>
+    arr.findIndex(x => x.nombre_carrera === c.nombre_carrera) === i
+  );
+  const disponibles = excluir ? unique.filter(c => String(c.id) !== String(excluir)) : unique;
+  const seleccionada = disponibles.find(c => String(c.id) === String(value));
+
+  const colorPorMod = (nombre) => {
+    const m = getModalidad(nombre);
+    return m === 'presencial' ? '#15803d' : m === 'virtual' ? '#dc2626' : '#374151';
+  };
+  const bgPorMod = (nombre) => {
+    const m = getModalidad(nombre);
+    return m === 'presencial' ? '#f0fdf4' : m === 'virtual' ? '#fef2f2' : '#f9fafb';
+  };
+
+  return (
+    <div style={{ position:'relative' }}>
+      {/* Leyenda */}
+      <div style={{ display:'flex', gap:14, marginBottom:6, fontSize:'0.7rem', color:'#6b7280' }}>
+        <span style={{ display:'flex', alignItems:'center', gap:4 }}>
+          <span style={{ width:9, height:9, borderRadius:'50%', background:'#16a34a', display:'inline-block' }}/>
+          Presencial
+        </span>
+        <span style={{ display:'flex', alignItems:'center', gap:4 }}>
+          <span style={{ width:9, height:9, borderRadius:'50%', background:'#dc2626', display:'inline-block' }}/>
+          Virtual
+        </span>
+      </div>
+
+      {/* Trigger */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          border: '1.5px solid #ddd', borderRadius:5, background:'white',
+          padding:'10px 14px', display:'flex', alignItems:'center',
+          justifyContent:'space-between', cursor:'pointer', userSelect:'none',
+        }}
+      >
+        {seleccionada ? (
+          <span style={{ display:'flex', alignItems:'center', gap:8, fontSize:'0.88rem', color: colorPorMod(seleccionada.nombre_carrera) }}>
+            <span style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: colorPorMod(seleccionada.nombre_carrera) }}/>
+            {seleccionada.nombre_carrera}
+          </span>
+        ) : (
+          <span style={{ color:'#9ca3af', fontSize:'0.88rem' }}>{placeholder}</span>
+        )}
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={2.5}><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position:'absolute', top:'100%', left:0, right:0, zIndex:200,
+          background:'white', border:'1.5px solid #ddd', borderTop:'none',
+          borderRadius:'0 0 6px 6px', maxHeight:220, overflowY:'auto',
+          boxShadow:'0 8px 24px rgba(0,0,0,0.1)',
+        }}>
+          <div
+            onClick={() => { onChange({ target:{ name, value:'' } }); setOpen(false); }}
+            style={{ padding:'9px 14px', fontSize:'0.82rem', color:'#9ca3af', cursor:'pointer' }}
+          >
+            {placeholder}
+          </div>
+          {disponibles.map(c => (
+            <div
+              key={c.id}
+              onClick={() => { onChange({ target:{ name, value: c.id } }); setOpen(false); }}
+              style={{
+                padding:'9px 14px', display:'flex', alignItems:'center', gap:8,
+                fontSize:'0.85rem', cursor:'pointer',
+                background: String(c.id) === String(value) ? bgPorMod(c.nombre_carrera) : 'white',
+                color: colorPorMod(c.nombre_carrera),
+                borderLeft: `3px solid ${colorPorMod(c.nombre_carrera)}`,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = bgPorMod(c.nombre_carrera); }}
+              onMouseLeave={e => { e.currentTarget.style.background = String(c.id) === String(value) ? bgPorMod(c.nombre_carrera) : 'white'; }}
+            >
+              <span style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: colorPorMod(c.nombre_carrera) }}/>
+              {c.nombre_carrera}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Componentes reutilizables de la tarjeta ─────────────────── */
 function Spinner() {
   return <span className="lp-btn-login__spinner" />;
@@ -492,22 +590,25 @@ export default function Login({ onLogin }) {
                     <h4 className="lp-reg-section__title">Elección de Carrera</h4>
                     <div className="lp-reg-grid lp-reg-grid--2">
                       <FormGroup label="Primera opción *" id="carrera_opcion1_id">
-                        <select id="carrera_opcion1_id" name="carrera_opcion1_id"
-                          value={regForm.carrera_opcion1_id} onChange={handleRegChange} required>
-                          <option value="">Seleccionar carrera...</option>
-                          {(carreras.length ? carreras : CARRERAS_STATIC.map((c,i) => ({ id: ['SIS','INF','TEL','ROB'][i], nombre_carrera: c.nombre }))).map(c => (
-                            <option key={c.id} value={c.id}>{c.nombre_carrera}</option>
-                          ))}
-                        </select>
+                        <CarreraSelect
+                          id="carrera_opcion1_id"
+                          name="carrera_opcion1_id"
+                          value={regForm.carrera_opcion1_id}
+                          onChange={handleRegChange}
+                          opciones={carreras.length ? carreras : CARRERAS_STATIC.map((c,i) => ({ id: ['SIS','INF','TEL','ROB'][i], nombre_carrera: c.nombre }))}
+                          placeholder="Seleccionar carrera..."
+                        />
                       </FormGroup>
                       <FormGroup label="Segunda opción (opcional)" id="carrera_opcion2_id">
-                        <select id="carrera_opcion2_id" name="carrera_opcion2_id"
-                          value={regForm.carrera_opcion2_id} onChange={handleRegChange}>
-                          <option value="">Ninguna</option>
-                          {(carreras.length ? carreras : CARRERAS_STATIC.map((c,i) => ({ id: ['SIS','INF','TEL','ROB'][i], nombre_carrera: c.nombre }))).filter(c => c.id !== regForm.carrera_opcion1_id).map(c => (
-                            <option key={c.id} value={c.id}>{c.nombre_carrera}</option>
-                          ))}
-                        </select>
+                        <CarreraSelect
+                          id="carrera_opcion2_id"
+                          name="carrera_opcion2_id"
+                          value={regForm.carrera_opcion2_id}
+                          onChange={handleRegChange}
+                          opciones={carreras.length ? carreras : CARRERAS_STATIC.map((c,i) => ({ id: ['SIS','INF','TEL','ROB'][i], nombre_carrera: c.nombre }))}
+                          placeholder="Ninguna"
+                          excluir={regForm.carrera_opcion1_id}
+                        />
                       </FormGroup>
                     </div>
                   </div>

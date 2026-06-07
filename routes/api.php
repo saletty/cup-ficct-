@@ -232,6 +232,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
     /* ── CU19: Mis resultados (cualquier postulante autenticado) ── */
     Route::get('/mis-resultados', [EvaluacionController::class, 'misResultados']);
     Route::get('/mi-examen',      [ExamenAdmisionController::class, 'miExamen']);
+    Route::get('/mis-horarios',   [InscripcionController::class, 'misHorarios']);
 
     /* ── CU21: Dashboard estadístico (cualquier usuario autenticado) ── */
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
