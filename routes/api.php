@@ -131,9 +131,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::get('/grupos/{grupoId}/{convocatoriaId}',                  [GrupoController::class, 'show']);
         Route::put('/grupos/{grupoId}/{convocatoriaId}',                  [GrupoController::class, 'update']);
         Route::delete('/grupos/{grupoId}/{convocatoriaId}',               [GrupoController::class, 'destroy']);
-        Route::get('/grupos/{grupoId}/{convocatoriaId}/horarios',         [GrupoController::class, 'horarios']);
-        Route::post('/grupos/{grupoId}/{convocatoriaId}/horarios',        [GrupoController::class, 'agregarHorario']);
-        Route::delete('/grupos/{grupoId}/{convocatoriaId}/horarios/{id}', [GrupoController::class, 'quitarHorario']);
+        Route::get('/grupos/{grupoId}/{convocatoriaId}/horarios',                [GrupoController::class, 'horarios']);
+        Route::post('/grupos/{grupoId}/{convocatoriaId}/horarios',               [GrupoController::class, 'agregarHorario']);
+        Route::delete('/grupos/{grupoId}/{convocatoriaId}/horarios/{id}',        [GrupoController::class, 'quitarHorario']);
+        Route::post('/grupos/{grupoId}/{convocatoriaId}/aplicar-turno',          [GrupoController::class, 'aplicarTurno']);
         Route::apiResource('aulas', AulaController::class)->parameters(['aulas' => 'nro']);
     });
 

@@ -10,7 +10,7 @@ const ESTADO_BADGE = {
 
 function Modal({ titulo, onClose, children }) {
   return (
-    <div className="pg-modal-backdrop">
+    <div className="pg-overlay">
       <div className="pg-modal" style={{ maxWidth: 520, width: '100%' }}>
         <div className="pg-modal__header">
           <h3 className="pg-modal__title">{titulo}</h3>
@@ -107,6 +107,16 @@ export default function Usuarios() {
     }
   };
 
+  const activar = async (u) => {
+    if (!window.confirm(`¿Activar al usuario "${u.nombre_completo ?? u.CI}"?`)) return;
+    try {
+      await client.put(`/usuarios/${u.CI}`, { estado: 'ACTIVO' });
+      setAlerta('Usuario activado.'); cargar(); setTimeout(() => setAlerta(''), 4000);
+    } catch (err) {
+      setAlerta(err.response?.data?.mensaje || 'No se pudo activar.'); setTimeout(() => setAlerta(''), 4000);
+    }
+  };
+
   const filtrados = usuarios.filter(u => {
     const q = busqueda.toLowerCase();
     return !q || String(u.CI).includes(q) || (u.nombre_completo ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q) || (u.rol?.nombre ?? '').toLowerCase().includes(q);
@@ -155,7 +165,9 @@ export default function Usuarios() {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="pg-btn pg-btn--ghost" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={() => abrirEditar(u)}>Editar</button>
-                      {u.estado !== 'INACTIVO' && (
+                      {u.estado === 'INACTIVO' ? (
+                        <button style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', borderRadius: 5, cursor: 'pointer' }} onClick={() => activar(u)}>Activar</button>
+                      ) : (
                         <button style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5', borderRadius: 5, cursor: 'pointer' }} onClick={() => desactivar(u)}>Desactivar</button>
                       )}
                     </div>

@@ -9,7 +9,7 @@ class Horario extends Model
     protected $table      = 'horario';
     public    $timestamps = false;
 
-    protected $fillable = ['grupo_id', 'convocatoria_id', 'dia', 'hora_inicio', 'hora_fin', 'aula_nro'];
+    protected $fillable = ['grupo_id', 'convocatoria_id', 'dia', 'hora_inicio', 'hora_fin', 'aula_nro', 'turno'];
 
     public function aula()
     {

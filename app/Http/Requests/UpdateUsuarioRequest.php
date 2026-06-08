@@ -19,7 +19,7 @@ class UpdateUsuarioRequest extends FormRequest
             'nombre_completo' => ['sometimes', 'string', 'max:150'],
             'email'           => ['sometimes', 'email', 'max:120', "unique:usuario,email,{$ci},CI"],
             'password'        => ['sometimes', 'string', 'min:8'],
-            'estado'          => ['sometimes', 'in:activo,inactivo'],
+            'estado'          => ['sometimes', 'in:ACTIVO,INACTIVO,BLOQUEADO'],
             'rol_id'          => ['sometimes', 'integer', 'exists:rol,id'],
         ];
     }
@@ -29,7 +29,7 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             'email.unique'   => 'Ya existe otro usuario con ese correo.',
             'password.min'   => 'La contraseña debe tener al menos 8 caracteres.',
-            'estado.in'      => 'El estado debe ser activo o inactivo.',
+            'estado.in'      => 'El estado debe ser ACTIVO, INACTIVO o BLOQUEADO.',
             'rol_id.exists'  => 'El rol seleccionado no existe.',
         ];
     }

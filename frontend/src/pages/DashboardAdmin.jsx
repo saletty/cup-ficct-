@@ -117,7 +117,7 @@ export default function DashboardAdmin() {
   const totalEvals = stats ? stats.aprobados + stats.reprobados : 0;
 
   return (
-    <div style={{ padding: '0 0 2rem' }}>
+    <div style={{ padding: '2rem 2.5rem' }}>
       {/* Header */}
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
         <div>

@@ -68,7 +68,7 @@ export default function DashboardPostulante({ usuario }) {
   const primerNombre = usuario?.nombre_completo?.split(' ')[0] ?? 'Postulante';
 
   return (
-    <div style={{ padding: '0 0 2rem' }}>
+    <div style={{ padding: '2rem 2.5rem' }}>
       {/* Bienvenida */}
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '1.9rem', fontWeight: 700, color: '#1a1a1a', margin: 0, lineHeight: 1.2 }}>

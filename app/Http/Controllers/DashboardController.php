@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Evaluacion;
 use App\Models\Grupo;
 use App\Models\Postulacion;
 use Illuminate\Http\JsonResponse;
@@ -13,12 +12,14 @@ class DashboardController extends Controller
 {
     public function stats(): JsonResponse
     {
-        // Total postulantes confirmados (excluyendo anulados) — usa idx_postulacion_estado
-        $totalInscritos = Postulacion::whereNotIn('estado_admision', ['anulado'])->count();
+        // Conteos por estado_admision desde postulacion
+        $counts = Postulacion::selectRaw('estado_admision, COUNT(*) as total')
+            ->groupBy('estado_admision')
+            ->pluck('total', 'estado_admision');
 
-        // Resultados de examen (evaluaciones finalizadas)
-        $aprobados  = Evaluacion::where('estado_resultado', 'aprobado')->count();
-        $reprobados = Evaluacion::where('estado_resultado', 'reprobado')->count();
+        $totalInscritos = $counts->except(['anulado'])->sum();
+        $aprobados      = (int) ($counts['aprobado']  ?? 0);
+        $reprobados     = (int) ($counts['reprobado'] ?? 0);
 
         // Grupos activos de la gestión vigente
         $gruposActivos = Grupo::where('estado', 'activo')->count();

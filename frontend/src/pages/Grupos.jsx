@@ -48,6 +48,9 @@ export default function Grupos() {
   const [formHor, setFormHor]         = useState(EMPTY_HOR);
   const [errHor, setErrHor]           = useState('');
   const [savingHor, setSavingHor]     = useState(false);
+  const [turnoSelec, setTurnoSelec]   = useState('');
+  const [aplicandoTurno, setAplicando] = useState(false);
+  const [msgTurno, setMsgTurno]       = useState('');
 
   /* ── Asignaciones (CU13) ───────────────────────────────── */
   const [asignaciones, setAsignaciones] = useState([]);
@@ -114,7 +117,7 @@ export default function Grupos() {
   /* ── Abrir panel de detalle ─────────────────────────────── */
   const abrirDetalle = async (g) => {
     setGrupoActivo(g); setTab('horarios');
-    setFormHor(EMPTY_HOR); setErrHor('');
+    setFormHor(EMPTY_HOR); setErrHor(''); setTurnoSelec(''); setMsgTurno('');
     setFormAsig({ ...EMPTY_ASIG, grupo_id: g.id, convocatoria_id: g.convocatoria_id });
     setErrAsig('');
     await recargarDetalle(g);
@@ -129,6 +132,24 @@ export default function Grupos() {
       setHorarios(h.data);
       setAsignaciones(a.data.filter(x => x.grupo_id === g.id && x.convocatoria_id === g.convocatoria_id));
     } catch {}
+  };
+
+  /* ── Aplicar turno completo ─────────────────────────────── */
+  const aplicarTurno = async () => {
+    if (!turnoSelec) return;
+    if (!confirm(`¿Aplicar turno "${turnoSelec}" al grupo ${grupoActivo.id}? Esto reemplazará los horarios actuales.`)) return;
+    setAplicando(true); setMsgTurno(''); setErrHor('');
+    try {
+      const { data } = await client.post(
+        `/grupos/${grupoActivo.id}/${grupoActivo.convocatoria_id}/aplicar-turno`,
+        { turno: turnoSelec }
+      );
+      setMsgTurno(data.mensaje);
+      await recargarDetalle(grupoActivo);
+      setTimeout(() => setMsgTurno(''), 4000);
+    } catch (err) {
+      setErrHor(err.response?.data?.mensaje ?? 'Error al aplicar turno.');
+    } finally { setAplicando(false); }
   };
 
   /* ── Horarios ──────────────────────────────────────────── */
@@ -251,53 +272,101 @@ export default function Grupos() {
               {/* ── TAB HORARIOS ─────────────────────────────── */}
               {tab === 'horarios' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {/* Formulario agregar horario */}
-                  <form onSubmit={agregarHorario} style={{ background: '#f9fafb', padding: '1rem', borderRadius: 6 }}>
-                    <p style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', color: '#374151' }}>Agregar Horario</p>
+
+                  {/* Selector de turno */}
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '1rem' }}>
+                    <p style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1e40af', marginBottom: '0.75rem' }}>
+                      Aplicar Turno Completo
+                    </p>
                     {errHor && <div className="pg-alert pg-alert--error" style={{ marginBottom: '0.75rem' }}>{errHor}</div>}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      <div className="pg-field">
-                        <label>Día *</label>
-                        <select value={formHor.dia} onChange={setH('dia')}>
-                          {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </div>
-                      <div className="pg-field">
-                        <label>Aula {grupoActivo.modalidad === 'presencial' ? '*' : '(opcional)'}</label>
-                        <select value={formHor.aula_nro} onChange={setH('aula_nro')}
-                          required={grupoActivo.modalidad === 'presencial'}>
-                          <option value="">-- Sin aula --</option>
-                          {aulas.map(a => <option key={a.nro} value={a.nro}>{a.nro} (cap. {a.capacidad})</option>)}
-                        </select>
-                      </div>
-                      <div className="pg-field">
-                        <label>Hora Inicio *</label>
-                        <input type="time" value={formHor.hora_inicio} onChange={setH('hora_inicio')} required />
-                      </div>
-                      <div className="pg-field">
-                        <label>Hora Fin * (debe ser posterior)</label>
-                        <input type="time" value={formHor.hora_fin} onChange={setH('hora_fin')}
-                          min={formHor.hora_inicio} required />
-                      </div>
+                    {msgTurno && <div className="pg-alert pg-alert--success" style={{ marginBottom: '0.75rem' }}>{msgTurno}</div>}
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {[
+                        { val: 'mañana', label: 'Mañana',  sub: '7:00 – 13:00', color: '#92400e', bg: '#fffbeb' },
+                        { val: 'tarde',  label: 'Tarde',   sub: '13:00 – 19:00', color: '#065f46', bg: '#ecfdf5' },
+                        { val: 'noche',  label: 'Noche',   sub: '17:30 – 22:30', color: '#3730a3', bg: '#eef2ff' },
+                      ].map(t => (
+                        <button key={t.val} type="button"
+                          onClick={() => setTurnoSelec(turnoSelec === t.val ? '' : t.val)}
+                          style={{
+                            padding: '8px 18px', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s',
+                            border: `2px solid ${turnoSelec === t.val ? t.color : '#d1d5db'}`,
+                            background: turnoSelec === t.val ? t.bg : 'white',
+                            color: turnoSelec === t.val ? t.color : '#374151',
+                            fontWeight: turnoSelec === t.val ? 700 : 500, fontSize: '0.82rem',
+                          }}>
+                          <div>{t.label}</div>
+                          <div style={{ fontSize: '0.68rem', opacity: 0.7 }}>{t.sub}</div>
+                        </button>
+                      ))}
+                      <button type="button" className="pg-btn pg-btn--primary"
+                        onClick={aplicarTurno}
+                        disabled={!turnoSelec || aplicandoTurno}
+                        style={{ height: 54, marginLeft: 'auto' }}>
+                        {aplicandoTurno ? 'Aplicando...' : `Aplicar turno ${turnoSelec || '...'}`}
+                      </button>
                     </div>
-                    <button type="submit" className="pg-btn pg-btn--primary" style={{ marginTop: '0.75rem' }} disabled={savingHor}>
-                      {savingHor ? 'Guardando...' : '+ Agregar Horario'}
-                    </button>
-                  </form>
+                    <p style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.5rem' }}>
+                      Reemplaza todos los horarios actuales con los {turnoSelec ? { mañana: 21, tarde: 21, noche: 21 }[turnoSelec] : '~21'} bloques del turno seleccionado.
+                    </p>
+                  </div>
+
+                  {/* Agregar horario individual (avanzado) */}
+                  <details style={{ background: '#f9fafb', borderRadius: 6, border: '1px solid #e5e7eb' }}>
+                    <summary style={{ padding: '0.75rem 1rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280' }}>
+                      Agregar horario individual (avanzado)
+                    </summary>
+                    <form onSubmit={agregarHorario} style={{ padding: '1rem', paddingTop: 0 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.75rem' }}>
+                        <div className="pg-field">
+                          <label>Día *</label>
+                          <select value={formHor.dia} onChange={setH('dia')}>
+                            {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                        </div>
+                        <div className="pg-field">
+                          <label>Aula {grupoActivo.modalidad === 'presencial' ? '*' : '(opcional)'}</label>
+                          <select value={formHor.aula_nro} onChange={setH('aula_nro')}
+                            required={grupoActivo.modalidad === 'presencial'}>
+                            <option value="">-- Sin aula --</option>
+                            {aulas.map(a => <option key={a.nro} value={a.nro}>{a.nro}{a.descripcion ? ` — ${a.descripcion}` : ''}</option>)}
+                          </select>
+                        </div>
+                        <div className="pg-field">
+                          <label>Hora Inicio *</label>
+                          <input type="time" value={formHor.hora_inicio} onChange={setH('hora_inicio')} required />
+                        </div>
+                        <div className="pg-field">
+                          <label>Hora Fin *</label>
+                          <input type="time" value={formHor.hora_fin} onChange={setH('hora_fin')} min={formHor.hora_inicio} required />
+                        </div>
+                      </div>
+                      <button type="submit" className="pg-btn pg-btn--primary" style={{ marginTop: '0.75rem' }} disabled={savingHor}>
+                        {savingHor ? 'Guardando...' : '+ Agregar'}
+                      </button>
+                    </form>
+                  </details>
 
                   {/* Lista de horarios */}
                   {horarios.length === 0
-                    ? <div className="pg-empty" style={{ padding: '1.5rem' }}>Sin horarios registrados</div>
+                    ? <div className="pg-empty" style={{ padding: '1.5rem' }}>Sin horarios — selecciona un turno arriba</div>
                     : (
                       <table className="pg-table">
-                        <thead><tr><th>Día</th><th>Inicio</th><th>Fin</th><th>Aula</th><th></th></tr></thead>
+                        <thead><tr><th>Turno</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Aula</th><th></th></tr></thead>
                         <tbody>
                           {horarios.map(h => (
                             <tr key={h.id}>
+                              <td>
+                                {h.turno && (
+                                  <span className={`pg-badge pg-badge--${h.turno === 'mañana' ? 'pendiente' : h.turno === 'tarde' ? 'aprobado' : 'virtual'}`}>
+                                    {h.turno}
+                                  </span>
+                                )}
+                              </td>
                               <td><span className="pg-badge pg-badge--activa">{h.dia}</span></td>
-                              <td>{h.hora_inicio}</td>
-                              <td>{h.hora_fin}</td>
-                              <td>{h.aula ? `${h.aula.nro} (cap. ${h.aula.capacidad})` : <span style={{ color: '#9ca3af' }}>Virtual</span>}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{h.hora_inicio}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{h.hora_fin}</td>
+                              <td style={{ fontSize: '0.78rem' }}>{h.aula ? `${h.aula.nro}` : <span style={{ color: '#9ca3af' }}>Virtual</span>}</td>
                               <td>
                                 <button className="pg-act-btn pg-act-btn--delete" onClick={() => quitarHorario(h.id)} title="Quitar"><IcoDel /></button>
                               </td>

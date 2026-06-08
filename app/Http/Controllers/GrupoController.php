@@ -213,4 +213,49 @@ class GrupoController extends Controller
 
         return response()->json(['mensaje' => 'Horario eliminado.']);
     }
+
+    /* ── Aplicar turno completo al grupo (CU14) ─────────────── */
+    public function aplicarTurno(Request $request, string $grupoId, string $convocatoriaId): JsonResponse
+    {
+        Grupo::where('id', $grupoId)->where('convocatoria_id', $convocatoriaId)->firstOrFail();
+
+        $data = $request->validate([
+            'turno' => ['required', 'in:mañana,tarde,noche'],
+        ], [
+            'turno.in' => 'Turno inválido. Use: mañana, tarde o noche.',
+        ]);
+
+        // Borrar horarios actuales del grupo antes de aplicar el nuevo turno
+        Horario::where('grupo_id', $grupoId)
+            ->where('convocatoria_id', $convocatoriaId)
+            ->delete();
+
+        // Copiar plantillas del turno seleccionado
+        $plantillas = Horario::whereNull('grupo_id')
+            ->where('turno', $data['turno'])
+            ->get();
+
+        if ($plantillas->isEmpty()) {
+            return response()->json(['mensaje' => 'No existen horarios plantilla para ese turno.'], 404);
+        }
+
+        $nuevos = $plantillas->map(fn($p) => [
+            'grupo_id'        => $grupoId,
+            'convocatoria_id' => $convocatoriaId,
+            'dia'             => $p->dia,
+            'hora_inicio'     => $p->hora_inicio,
+            'hora_fin'        => $p->hora_fin,
+            'aula_nro'        => $p->aula_nro,
+            'turno'           => $p->turno,
+        ])->toArray();
+
+        Horario::insert($nuevos);
+
+        BitacoraService::log("Turno '{$data['turno']}' aplicado al grupo {$grupoId}/{$convocatoriaId} ({$plantillas->count()} horarios)");
+
+        return response()->json([
+            'mensaje'  => "Turno '{$data['turno']}' aplicado: {$plantillas->count()} horarios asignados.",
+            'horarios' => $plantillas->count(),
+        ], 201);
+    }
 }
