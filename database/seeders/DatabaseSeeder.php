@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Carrera;
+use App\Models\Convocatoria;
 use App\Models\Docente;
 use App\Models\Permiso;
+use App\Models\Postulacion;
 use App\Models\Postulante;
 use App\Models\Rol;
 use App\Models\User;
@@ -231,7 +233,17 @@ class DatabaseSeeder extends Seeder
             Postulante::firstOrCreate(['CI' => $p['CI']]);
         }
 
-        // ── 4. Carreras FICCT con modalidades ────────────────────
+        // ── 4. Convocatorias ─────────────────────────────────────
+        Convocatoria::firstOrCreate(
+            ['id' => '1-2026'],
+            ['nombre' => 'Primer Semestre 2026', 'fecha_inicio' => '2026-01-15', 'fecha_fin' => '2026-06-30', 'estado' => 'habilitada', 'cupo_maximo' => 200]
+        );
+        Convocatoria::firstOrCreate(
+            ['id' => '2-2026'],
+            ['nombre' => 'Segundo Semestre 2026', 'fecha_inicio' => '2026-07-01', 'fecha_fin' => '2026-12-15', 'estado' => 'habilitada', 'cupo_maximo' => 200]
+        );
+
+        // ── 5. Carreras FICCT con modalidades ────────────────────
         $carreras = [
             ['id' => 'SIS-V', 'nombre_carrera' => 'Ing. en Sistemas (Virtual)'],
             ['id' => 'SIS-P', 'nombre_carrera' => 'Ing. en Sistemas (Presencial)'],
@@ -243,6 +255,30 @@ class DatabaseSeeder extends Seeder
 
         foreach ($carreras as $c) {
             Carrera::firstOrCreate(['id' => $c['id']], ['nombre_carrera' => $c['nombre_carrera']]);
+        }
+
+        // ── 6. Inscripciones de prueba (convocatoria 2-2026) ─────
+        $inscripcionesSeed = [
+            ['ci' => 8001001, 'op1' => 'SIS-P', 'op2' => null,    'estado' => 'pendiente'],
+            ['ci' => 8001003, 'op1' => 'SIS-V', 'op2' => 'NET',   'estado' => 'pendiente'],
+            ['ci' => 8001004, 'op1' => 'ROB',   'op2' => 'SIS-P', 'estado' => 'pendiente'],
+            ['ci' => 8001005, 'op1' => 'NET',   'op2' => null,    'estado' => 'pendiente'],
+            ['ci' => 8001006, 'op1' => 'SIS-P', 'op2' => 'ROB',   'estado' => 'aprobado'],
+            ['ci' => 8001007, 'op1' => 'SIS-V', 'op2' => 'NET',   'estado' => 'pendiente'],
+            ['ci' => 8001008, 'op1' => 'ROB',   'op2' => null,    'estado' => 'reprobado'],
+            ['ci' => 8001009, 'op1' => 'NET',   'op2' => 'SIS-P', 'estado' => 'anulado'],
+        ];
+
+        foreach ($inscripcionesSeed as $ins) {
+            Postulacion::firstOrCreate(
+                ['postulante_ci' => $ins['ci'], 'convocatoria_id' => '2-2026'],
+                [
+                    'carrera_opcion1_id' => $ins['op1'],
+                    'carrera_opcion2_id' => $ins['op2'],
+                    'estado_admision'    => $ins['estado'],
+                    'fecha_registro'     => now(),
+                ]
+            );
         }
     }
 }
