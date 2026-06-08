@@ -92,6 +92,8 @@ function NuevaInscripcionForm({ ci, onExito }) {
   );
 }
 
+const ESTADO_ACTIVO = new Set(['pendiente', 'inscrito']);
+
 export default function MiInscripcionPostulante({ usuario }) {
   const [inscripciones, setInscripciones] = useState([]);
   const [loading, setLoading]             = useState(true);
@@ -111,6 +113,12 @@ export default function MiInscripcionPostulante({ usuario }) {
 
   const ci = usuario?.CI;
 
+  // Calcular si tiene una inscripción activa en alguna convocatoria abierta
+  const sorted     = [...inscripciones].sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+  const ultima     = sorted[0];
+  const tieneActiva = sorted.some(i => ESTADO_ACTIVO.has(i.estado_admision));
+  const aplazado   = !tieneActiva && ultima && (ultima.estado_admision === 'reprobado' || ultima.estado_admision === 'anulado');
+
   return (
     <div className="pg">
       <div className="pg-header">
@@ -123,8 +131,32 @@ export default function MiInscripcionPostulante({ usuario }) {
 
       {error && <div className="pg-alert pg-alert--error">{error}</div>}
 
-      {/* Formulario de nueva inscripción */}
-      {ci && <NuevaInscripcionForm ci={ci} onExito={cargar} />}
+      {/* Banner: aplazado de convocatoria anterior */}
+      {!loading && aplazado && (
+        <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 8, padding: '12px 16px', marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" style={{ width: 20, flexShrink: 0, marginTop: 2 }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div>
+            <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#92400e', margin: 0 }}>
+              {ultima.estado_admision === 'reprobado' ? 'No aprobaste la última convocatoria' : 'Tu inscripción anterior fue anulada'}
+            </p>
+            <p style={{ fontSize: '0.78rem', color: '#a16207', margin: '2px 0 0' }}>
+              Puedes inscribirte a una nueva convocatoria usando el formulario de abajo.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Formulario de nueva inscripción: visible si no tiene inscripción activa (pendiente/inscrito) */}
+      {ci && !tieneActiva && <NuevaInscripcionForm ci={ci} onExito={cargar} />}
+
+      {/* Si tiene inscripción activa, mostrar aviso */}
+      {!loading && tieneActiva && (
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '12px 16px', marginBottom: '1rem', fontSize: '0.82rem', color: '#1e40af' }}>
+          Ya tienes una inscripción activa en curso. Cuando finalice la convocatoria podrás inscribirte de nuevo si es necesario.
+        </div>
+      )}
 
       {/* Historial de inscripciones */}
       <div style={{ marginBottom: '0.75rem' }}>
@@ -140,7 +172,7 @@ export default function MiInscripcionPostulante({ usuario }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {[...inscripciones].sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).map((ins, i) => (
+          {sorted.map((ins, i) => (
             <div key={ins.id ?? i} style={{
               background: 'white', border: '1px solid #e5e7eb', borderRadius: 10,
               padding: '1.25rem', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',

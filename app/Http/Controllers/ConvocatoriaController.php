@@ -19,6 +19,11 @@ class ConvocatoriaController extends Controller
 
     public function index(): JsonResponse
     {
+        // Auto-finalizar convocatorias cuya fecha_fin ya pasó
+        Convocatoria::where('estado', 'habilitada')
+            ->where('fecha_fin', '<', now()->toDateString())
+            ->update(['estado' => 'finalizada']);
+
         return response()->json(
             Convocatoria::orderBy('fecha_inicio', 'desc')->get()
         );

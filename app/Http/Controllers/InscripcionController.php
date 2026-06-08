@@ -17,10 +17,16 @@ use Illuminate\Http\Request;
 // ============================================================
 class InscripcionController extends Controller
 {
-    /* ── Listar convocatorias activas ───────────────────────── */
+    /* ── Listar convocatorias disponibles para inscripción ─── */
     public function convocatorias(): JsonResponse
     {
+        // Auto-expirar antes de retornar (por si index() no se llamó recientemente)
+        Convocatoria::where('estado', 'habilitada')
+            ->where('fecha_fin', '<', now()->toDateString())
+            ->update(['estado' => 'finalizada']);
+
         $convocatorias = Convocatoria::where('estado', 'habilitada')
+            ->where('fecha_fin', '>=', now()->toDateString())
             ->orderBy('fecha_inicio', 'desc')
             ->get();
 
