@@ -9,6 +9,7 @@ use App\Models\Postulante;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\BitacoraService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -59,6 +60,8 @@ class RegistroController extends Controller
 
         // Crea el registro vacío en postulante (herencia por CI)
         Postulante::create(['CI' => $request->CI]);
+
+        BitacoraService::log("CI {$request->CI} habilitado para registro de postulante");
 
         return response()->json([
             'mensaje' => 'CI registrado correctamente. El postulante puede completar su registro en la plataforma web.',
@@ -155,6 +158,8 @@ class RegistroController extends Controller
             );
 
             DB::commit();
+
+            BitacoraService::log("Postulante CI={$request->CI} completó su registro en la plataforma");
 
             return response()->json([
                 'mensaje' => 'Registro completado. Se envió una contraseña temporal a ' . $request->email . '. Úsela para su primer ingreso y cámbiela de inmediato.',

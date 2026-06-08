@@ -24,13 +24,16 @@ export default function Inscripcion() {
   const [error, setError]                 = useState('');
   const [success, setSuccess]             = useState('');
 
-  const cargar = async (p = 1) => {
+  const cargar = async (p = 1, over = null) => {
     setLoading(true);
+    const conv = over?.conv  ?? filtroConv;
+    const est  = over?.est   ?? filtroEst;
+    const ci   = over?.ci    ?? filtroCi;
     try {
       const params = { page: p };
-      if (filtroConv) params.convocatoria_id = filtroConv;
-      if (filtroEst)  params.estado = filtroEst;
-      if (filtroCi)   params.ci = filtroCi;
+      if (conv) params.convocatoria_id = conv;
+      if (est)  params.estado = est;
+      if (ci)   params.ci = ci;
       const { data } = await client.get('/inscripciones', { params });
       setInscripciones(data.data); setMeta({ total: data.total, lastPage: data.last_page }); setPage(p);
     } catch { /* silencioso */ }
@@ -100,7 +103,7 @@ export default function Inscripcion() {
           <option value="anulado">Anulado</option>
         </select>
         <button className="pg-btn pg-btn--primary" onClick={() => cargar(1)}>Filtrar</button>
-        <button className="pg-btn pg-btn--ghost" onClick={() => { setFiltroCi(''); setFiltroConv(''); setFiltroEst(''); cargar(1); }}>Limpiar</button>
+        <button className="pg-btn pg-btn--ghost" onClick={() => { setFiltroCi(''); setFiltroConv(''); setFiltroEst(''); cargar(1, { ci: '', conv: '', est: '' }); }}>Limpiar</button>
       </div>
 
       <div className="pg-table-wrap">

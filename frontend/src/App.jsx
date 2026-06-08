@@ -16,11 +16,14 @@ import Pagos          from './pages/Pagos';
 import Examenes       from './pages/Examenes';
 import Evaluaciones   from './pages/Evaluaciones';
 import MisResultados  from './pages/MisResultados';
-import DashboardAdmin        from './pages/DashboardAdmin';
-import DashboardPostulante   from './pages/DashboardPostulante';
-import Reportes              from './pages/Reportes';
+import DashboardAdmin          from './pages/DashboardAdmin';
+import DashboardPostulante     from './pages/DashboardPostulante';
+import Reportes                from './pages/Reportes';
 import MiInscripcionPostulante from './pages/MiInscripcionPostulante';
-import MisHorarios           from './pages/MisHorarios';
+import MisHorarios             from './pages/MisHorarios';
+import Usuarios                from './pages/Usuarios';
+import Roles                   from './pages/Roles';
+import ControlAcceso           from './pages/ControlAcceso';
 
 /*
  * ================================================================
@@ -72,6 +75,8 @@ const PERMISOS_PAGINAS = {
   'mis-resultados': null,
   'mis-horarios':   null,
   reportes:         'Ver reportes',
+  roles:            'Gestionar usuarios',
+  'control-acceso': 'Gestionar usuarios',
 };
 
 function App() {
@@ -121,7 +126,9 @@ function App() {
     bachillerato:  <Bachillerato />,
     carreras:      <Carreras />,
     bitacora:      <Bitacora />,
-    usuarios:      <Dashboard usuario={auth.usuario} debecambiar={false} onLogout={handleLogout} />,
+    usuarios:        <Usuarios />,
+    roles:           <Roles />,
+    'control-acceso': <ControlAcceso />,
     convocatorias:   <Convocatorias />,
     grupos:          <Grupos />,
     docentes:        <Docentes />,

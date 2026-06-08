@@ -19,12 +19,14 @@ export default function Postulantes() {
   const [error, setError]       = useState('');
   const [carreras, setCarreras] = useState([]);
 
-  const cargar = async (p = 1) => {
+  const cargar = async (p = 1, over = null) => {
     setLoading(true);
+    const s = over?.search ?? search;
+    const e = over?.estado ?? estado;
     try {
       const params = { page: p };
-      if (search) params.search = search;
-      if (estado) params.estado = estado;
+      if (s) params.search = s;
+      if (e) params.estado = e;
       const { data: res } = await client.get('/postulantes', { params });
       setData(res.data); setMeta({ total: res.total, lastPage: res.last_page }); setPage(p);
     } catch { /* silencioso */ }
@@ -38,6 +40,7 @@ export default function Postulantes() {
     setForm({
       nombre_completo: item.usuario?.nombre_completo ?? '',
       email: item.usuario?.email ?? '',
+      estado: item.usuario?.estado ?? 'ACTIVO',
       fecha_nacimiento: item.fecha_nacimiento ?? '',
       sexo: item.sexo ?? '',
       direccion: item.direccion ?? '',
@@ -94,7 +97,7 @@ export default function Postulantes() {
           <option value="BLOQUEADO">Bloqueado</option>
         </select>
         <button className="pg-btn pg-btn--primary" onClick={() => cargar(1)}>Buscar</button>
-        <button className="pg-btn pg-btn--ghost" onClick={() => { setSearch(''); setEstado(''); cargar(1); }}>Limpiar</button>
+        <button className="pg-btn pg-btn--ghost" onClick={() => { setSearch(''); setEstado(''); cargar(1, { search: '', estado: '' }); }}>Limpiar</button>
       </div>
 
       <div className="pg-table-wrap">
@@ -169,6 +172,9 @@ export default function Postulantes() {
                 ['Ciudad', modal.item.ciudad],
                 ['1ª carrera', modal.item.carrera_opcion1?.nombre_carrera],
                 ['2ª carrera', modal.item.carrera_opcion2?.nombre_carrera],
+                ['Colegio procedencia', modal.item.colegio_procedencia],
+                ['Año de egreso', modal.item.anio_egreso],
+                ['Título de bachiller', modal.item.titulo_bachiller],
               ].map(([k, v]) => (
                 <div key={k} style={{ display:'flex', padding:'8px 0', borderBottom:'1px solid #f3f4f6', gap:'1rem' }}>
                   <span style={{ width:140, fontSize:'0.75rem', fontWeight:700, color:'#6b7280', textTransform:'uppercase', flexShrink:0 }}>{k}</span>
@@ -215,6 +221,14 @@ export default function Postulantes() {
                       <option value="">Seleccionar</option>
                       <option value="M">Masculino</option>
                       <option value="F">Femenino</option>
+                    </select>
+                  </div>
+                  <div className="pg-field">
+                    <label>Estado de cuenta</label>
+                    <select value={form.estado} onChange={e => setForm(p => ({...p, estado: e.target.value}))}>
+                      <option value="ACTIVO">ACTIVO</option>
+                      <option value="INACTIVO">INACTIVO</option>
+                      <option value="BLOQUEADO">BLOQUEADO</option>
                     </select>
                   </div>
                   <div className="pg-field">

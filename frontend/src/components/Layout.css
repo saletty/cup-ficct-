@@ -18,6 +18,12 @@
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 50;
+  transition: width 0.22s ease;
+  overflow: hidden;
+}
+
+.lay-sidebar--collapsed {
+  width: 60px;
 }
 
 .lay-sidebar__brand {
@@ -26,7 +32,16 @@
   gap: 10px;
   padding: 1.25rem 1rem;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  min-width: 240px;
 }
+
+.lay-sidebar--collapsed .lay-sidebar__brand {
+  padding: 1.25rem 0;
+  justify-content: center;
+  min-width: unset;
+}
+
+.lay-sidebar--collapsed .lay-brand-text { display: none; }
 
 .lay-sidebar__brand svg {
   width: 34px; height: 34px; flex-shrink: 0;
@@ -72,7 +87,17 @@
   border-radius: 0;
   transition: all 0.2s;
   position: relative;
+  white-space: nowrap;
+  overflow: hidden;
 }
+
+.lay-sidebar--collapsed .lay-nav-item {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
+}
+
+.lay-sidebar--collapsed .lay-nav-item .lay-nav-label { display: none; }
 
 .lay-nav-item:hover {
   background: rgba(255,255,255,0.08);
@@ -109,7 +134,17 @@
   gap: 8px;
   padding: 0.85rem 1rem;
   border-top: 1px solid rgba(255,255,255,0.1);
+  min-width: 240px;
 }
+
+.lay-sidebar--collapsed .lay-sidebar__user {
+  flex-direction: column;
+  padding: 0.75rem 0;
+  gap: 6px;
+  min-width: unset;
+}
+
+.lay-sidebar--collapsed .lay-user-info { display: none; }
 
 .lay-user-avatar {
   width: 32px; height: 32px;
@@ -160,6 +195,27 @@
 .lay-logout-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
 .lay-logout-btn svg   { width: 15px; height: 15px; }
 
+/* ── Toggle button (minimizar sidebar) ───────────────────── */
+.lay-toggle-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.lay-toggle-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.lay-toggle-btn svg   { width: 16px; height: 16px; }
+
+.lay-sidebar--collapsed .lay-toggle-btn { margin-left: 0; }
+
 /* ── Contenido principal ──────────────────────────────────── */
 .lay-main {
   margin-left: 240px;
@@ -167,4 +223,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.22s ease;
+}
+
+.lay-main--collapsed {
+  margin-left: 60px;
 }

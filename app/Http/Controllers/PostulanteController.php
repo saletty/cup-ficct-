@@ -70,10 +70,11 @@ class PostulanteController extends Controller
             'carrera_opcion2_id'  => ['nullable', 'string', 'exists:carrera,id'],
         ]);
 
-        // Datos del usuario (nombre, email)
+        // Datos del usuario (nombre, email, estado)
         $dataUsuario = $request->validate([
             'nombre_completo' => ['sometimes', 'string', 'max:150'],
             'email'           => ['sometimes', 'email', "unique:usuario,email,{$ci},CI"],
+            'estado'          => ['sometimes', 'in:ACTIVO,INACTIVO,BLOQUEADO'],
         ]);
 
         DB::transaction(function () use ($postulante, $dataPostulante, $dataUsuario) {

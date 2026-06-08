@@ -70,8 +70,13 @@ class DocenteController extends Controller
             'profesion'                    => ['sometimes', 'string', 'max:100'],
             'maestria'                     => ['sometimes', 'string', 'max:150'],
             'diplomado_educacion_superior' => ['sometimes', 'string', 'max:150'],
+            'estado'                       => ['sometimes', 'in:ACTIVO,INACTIVO,BLOQUEADO'],
         ]);
 
+        if (isset($data['estado'])) {
+            $docente->usuario->update(['estado' => $data['estado']]);
+            unset($data['estado']);
+        }
         $docente->update($data);
         BitacoraService::log("Docente actualizado: CI={$ci}");
 

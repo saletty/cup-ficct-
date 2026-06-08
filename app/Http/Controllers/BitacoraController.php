@@ -22,7 +22,7 @@ class BitacoraController extends Controller
             $query->where('usuario_ci', $request->usuario_ci);
         }
         if ($request->filled('accion')) {
-            $query->where('accion', 'like', '%' . $request->accion . '%');
+            $query->where('accion', 'ilike', '%' . $request->accion . '%');
         }
         if ($request->filled('desde')) {
             $query->whereDate('fecha', '>=', $request->desde);

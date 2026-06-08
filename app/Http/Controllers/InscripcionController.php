@@ -74,20 +74,22 @@ class InscripcionController extends Controller
             'carrera_opcion2_id.different' => 'La segunda opción debe ser diferente a la primera.',
         ]);
 
-        // Verificar que la convocatoria esté activa
+        // Verificar que la convocatoria esté habilitada
         $convocatoria = Convocatoria::find($data['convocatoria_id']);
-        if ($convocatoria->estado !== 'activa') {
-            return response()->json(['mensaje' => 'La convocatoria ya no está activa.'], 422);
+        if ($convocatoria->estado !== 'habilitada') {
+            return response()->json(['mensaje' => 'La convocatoria no está habilitada para inscripciones.'], 422);
         }
 
-        // Verificar que no esté ya inscrito en esta convocatoria
+        // Verificar que no esté ya inscrito activamente en esta convocatoria
+        // (se permite re-inscripción si la inscripción anterior fue anulada)
         $yaInscrito = Postulacion::where('postulante_ci', $data['postulante_ci'])
             ->where('convocatoria_id', $data['convocatoria_id'])
+            ->where('estado_admision', '!=', 'anulado')
             ->exists();
 
         if ($yaInscrito) {
             return response()->json([
-                'mensaje' => 'El postulante ya está inscrito en esta convocatoria.',
+                'mensaje' => 'El postulante ya tiene una inscripción activa en esta convocatoria.',
             ], 409);
         }
 

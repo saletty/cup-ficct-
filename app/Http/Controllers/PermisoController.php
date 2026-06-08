@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Permiso;
 use App\Models\Rol;
+use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -56,6 +57,8 @@ class PermisoController extends Controller
         // sync() reemplaza todos los permisos actuales por los enviados
         $rolModel->permisos()->sync($request->permisos);
 
+        BitacoraService::log("Permisos del rol '{$rolModel->nombre}' actualizados");
+
         return response()->json([
             'mensaje'  => 'Permisos asignados correctamente al rol.',
             'rol'      => $rolModel->nombre,
@@ -78,6 +81,8 @@ class PermisoController extends Controller
 
         // syncWithoutDetaching evita duplicados sin eliminar los permisos existentes
         $rolModel->permisos()->syncWithoutDetaching([$permiso]);
+
+        BitacoraService::log("Permiso '{$permisoModel->descripcion}' agregado al rol '{$rolModel->nombre}'");
 
         return response()->json([
             'mensaje' => "Permiso '{$permisoModel->descripcion}' agregado al rol '{$rolModel->nombre}'.",
@@ -102,6 +107,8 @@ class PermisoController extends Controller
         }
 
         $rolModel->permisos()->detach($permiso);
+
+        BitacoraService::log("Permiso '{$permisoModel->descripcion}' quitado del rol '{$rolModel->nombre}'");
 
         return response()->json([
             'mensaje' => "Permiso '{$permisoModel->descripcion}' quitado del rol '{$rolModel->nombre}'.",

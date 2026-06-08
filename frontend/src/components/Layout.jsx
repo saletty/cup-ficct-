@@ -43,12 +43,6 @@ const NAV = [
     icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
   },
   {
-    key: 'bachillerato',
-    label: 'Bachillerato',
-    permiso: 'Gestionar postulantes',
-    icon: 'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z',
-  },
-  {
     key: 'carreras',
     label: 'Carreras',
     permiso: 'Gestionar carreras',
@@ -124,7 +118,19 @@ const NAV = [
     key: 'usuarios',
     label: 'Usuarios',
     permiso: 'Gestionar usuarios',
-    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+  },
+  {
+    key: 'roles',
+    label: 'Roles',
+    permiso: 'Gestionar usuarios',
+    icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+  },
+  {
+    key: 'control-acceso',
+    label: 'Control de Acceso',
+    permiso: 'Gestionar usuarios',
+    icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
   },
 ];
 
@@ -138,6 +144,13 @@ function NavIcon({ path }) {
 
 export default function Layout({ children, page, setPage, usuario, onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false);
+  const [collapsed, setCollapsed]   = useState(() => localStorage.getItem('nav_collapsed') === '1');
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('nav_collapsed', next ? '1' : '');
+  };
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -158,16 +171,24 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
   return (
     <div className="lay-root">
       {/* ── Sidebar ──────────────────────────────────────────── */}
-      <aside className="lay-sidebar">
+      <aside className={`lay-sidebar${collapsed ? ' lay-sidebar--collapsed' : ''}`}>
         <div className="lay-sidebar__brand">
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
             <path d="M12 2L3 7v6c0 5.25 3.75 10.15 9 11.35C17.25 23.15 21 18.25 21 13V7L12 2z"/>
             <path d="M9 12l2 2 4-4"/>
           </svg>
-          <div>
+          <div className="lay-brand-text">
             <span className="lay-sidebar__name">CUP FICCT</span>
             <span className="lay-sidebar__sub">Sistema de Admisión</span>
           </div>
+          <button className="lay-toggle-btn" onClick={toggleCollapsed} title={collapsed ? 'Expandir menú' : 'Minimizar menú'}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {collapsed
+                ? <path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>
+                : <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
+              }
+            </svg>
+          </button>
         </div>
 
         <nav className="lay-sidebar__nav">
@@ -176,9 +197,12 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
               key={item.key}
               className={`lay-nav-item${page === item.key ? ' lay-nav-item--active' : ''}`}
               onClick={() => setPage(item.key)}
+              title={collapsed ? item.label : undefined}
             >
               <span className="lay-nav-item__icon"><NavIcon path={item.icon} /></span>
-              <span>{item.label}</span>
+              <span className="lay-nav-label">
+                {item.key === 'inscripcion' && usuario?.rol !== 'Postulante' ? 'Inscripciones' : item.label}
+              </span>
             </button>
           ))}
         </nav>
@@ -198,7 +222,7 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
       </aside>
 
       {/* ── Contenido principal ──────────────────────────────── */}
-      <main className="lay-main">
+      <main className={`lay-main${collapsed ? ' lay-main--collapsed' : ''}`}>
         {children}
       </main>
     </div>

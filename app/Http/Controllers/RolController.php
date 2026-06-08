@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rol;
+use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,8 @@ class RolController extends Controller
         ]);
 
         $rol = Rol::create($request->only(['nombre', 'descripcion']));
+
+        BitacoraService::log("Rol creado: {$rol->nombre}");
 
         return response()->json([
             'mensaje' => 'Rol creado correctamente.',
@@ -69,6 +72,8 @@ class RolController extends Controller
 
         $rolModel->update($request->only(['nombre', 'descripcion']));
 
+        BitacoraService::log("Rol actualizado: {$rolModel->nombre}");
+
         return response()->json([
             'mensaje' => 'Rol actualizado correctamente.',
             'rol'     => $rolModel->fresh()->load('permisos'),
@@ -91,6 +96,8 @@ class RolController extends Controller
         }
 
         $rolModel->delete();
+
+        BitacoraService::log("Rol eliminado: {$rolModel->nombre}");
 
         return response()->json([
             'mensaje' => 'Rol eliminado correctamente.',

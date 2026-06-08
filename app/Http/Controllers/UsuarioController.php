@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
 use App\Models\User;
+use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -34,6 +35,8 @@ class UsuarioController extends Controller
             'estado'         => $request->estado ?? 'ACTIVO',
             'rol_id'         => $request->rol_id,
         ]);
+
+        BitacoraService::log("Usuario creado: CI={$usuario->CI} — {$usuario->nombre_completo}");
 
         return response()->json([
             'mensaje'  => 'Usuario registrado correctamente.',
@@ -70,6 +73,8 @@ class UsuarioController extends Controller
 
         $user->update($data);
 
+        BitacoraService::log("Usuario actualizado: CI={$user->CI} — {$user->nombre_completo}");
+
         return response()->json([
             'mensaje'  => 'Usuario actualizado correctamente.',
             'usuario'  => $user->fresh()->load('rol'),
@@ -93,6 +98,8 @@ class UsuarioController extends Controller
 
         // Revoca todos sus tokens al desactivar
         $user->tokens()->delete();
+
+        BitacoraService::log("Usuario desactivado: CI={$user->CI} — {$user->nombre_completo}");
 
         return response()->json([
             'mensaje' => 'Usuario desactivado correctamente.',

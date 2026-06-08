@@ -1,89 +1,95 @@
-// ============================================================
-// CU4 — Gestionar Roles
-// CRUD de roles: crear, editar, asignar permisos, eliminar.
-// ============================================================
+// CU4 — Gestionar Roles del sistema
 import { useState, useEffect } from 'react';
 import client from '../api/client';
 import './pages.css';
 
-const EMPTY_FORM = { nombre: '', descripcion: '' };
+function Modal({ titulo, onClose, children }) {
+  return (
+    <div className="pg-modal-backdrop">
+      <div className="pg-modal" style={{ maxWidth: 460, width: '100%' }}>
+        <div className="pg-modal__header">
+          <h3 className="pg-modal__title">{titulo}</h3>
+          <button className="pg-modal__close" onClick={onClose}>×</button>
+        </div>
+        <div className="pg-modal__body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function campo(label, children, error) {
+  return (
+    <div style={{ marginBottom: '0.85rem' }}>
+      <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#6b7280', marginBottom: 5 }}>{label}</label>
+      {children}
+      {error && <p style={{ fontSize: '0.72rem', color: '#dc2626', marginTop: 3 }}>{error}</p>}
+    </div>
+  );
+}
+
+const inp = (error) => ({
+  width: '100%', boxSizing: 'border-box', padding: '9px 12px', fontSize: '0.88rem',
+  border: `1.5px solid ${error ? '#dc2626' : '#d1d5db'}`, borderRadius: 5, outline: 'none',
+});
 
 export default function Roles() {
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [editingId, setEditingId] = useState(null);
+  const [roles,    setRoles]    = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [modal,    setModal]    = useState(false);
+  const [editando, setEditando] = useState(null);
+  const [form,     setForm]     = useState({ nombre: '', descripcion: '' });
+  const [errors,   setErrors]   = useState({});
+  const [saving,   setSaving]   = useState(false);
+  const [alerta,   setAlerta]   = useState({ msg: '', tipo: '' });
 
-  const cargar = async () => {
+  const cargar = () => {
     setLoading(true);
-    try {
-      const { data } = await client.get('/roles');
-      setRoles(data);
-    } catch { /* silencioso */ }
-    finally { setLoading(false); }
+    client.get('/roles').then(r => setRoles(r.data)).catch(() => {}).finally(() => setLoading(false));
   };
 
   useEffect(() => { cargar(); }, []);
 
-  const abrirCrear = () => {
-    setForm(EMPTY_FORM);
-    setEditingId(null);
-    setError('');
-    setSuccess('');
-    setModal(true);
+  const mostrar = (msg, tipo = 'success') => {
+    setAlerta({ msg, tipo }); setTimeout(() => setAlerta({ msg: '', tipo: '' }), 4000);
   };
 
-  const abrirEditar = async (rol) => {
-    setForm({ nombre: rol.nombre, descripcion: rol.descripcion ?? '' });
-    setEditingId(rol.id);
-    setError('');
-    setSuccess('');
-    setModal(true);
+  const abrirCrear = () => { setForm({ nombre: '', descripcion: '' }); setErrors({}); setEditando(null); setModal(true); };
+  const abrirEditar = (r) => { setEditando(r); setForm({ nombre: r.nombre, descripcion: r.descripcion ?? '' }); setErrors({}); setModal(true); };
+  const cerrar = () => { setModal(false); setEditando(null); setErrors({}); };
+
+  const handleChange = (e) => {
+    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    setErrors(p => ({ ...p, [e.target.name]: null }));
   };
 
-  const cerrar = () => {
-    setModal(false);
-    setError('');
-    setSuccess('');
-    setEditingId(null);
-  };
-
-  const guardar = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
-    setSuccess('');
-
+  const handleSubmit = async (e) => {
+    e.preventDefault(); setSaving(true); setErrors({});
     try {
-      if (editingId) {
-        await client.put(`/roles/${editingId}`, form);
-        setSuccess('Rol actualizado correctamente.');
+      if (editando) {
+        await client.put(`/roles/${editando.id}`, form);
+        mostrar('Rol actualizado correctamente.');
       } else {
         await client.post('/roles', form);
-        setSuccess('Rol creado correctamente.');
+        mostrar('Rol creado correctamente.');
       }
-      cargar();
-      setTimeout(cerrar, 1800);
+      cerrar(); cargar();
     } catch (err) {
-      const msgs = err.response?.data?.errors;
-      setError(msgs ? Object.values(msgs).flat().join(' · ') : err.response?.data?.mensaje ?? 'Error al guardar.');
-    } finally {
-      setSaving(false);
-    }
+      const d = err.response?.data;
+      if (d?.errors) {
+        const m = {}; Object.entries(d.errors).forEach(([k, v]) => { m[k] = v[0]; }); setErrors(m);
+      } else {
+        setErrors({ _general: d?.mensaje || d?.message || 'Error al guardar.' });
+      }
+    } finally { setSaving(false); }
   };
 
-  const eliminar = async (id, nombre) => {
-    if (!confirm(`¿Eliminar el rol "${nombre}"?`)) return;
+  const eliminar = async (r) => {
+    if (!window.confirm(`¿Eliminar el rol "${r.nombre}"? Solo es posible si no tiene usuarios asignados.`)) return;
     try {
-      await client.delete(`/roles/${id}`);
-      cargar();
+      await client.delete(`/roles/${r.id}`);
+      mostrar('Rol eliminado.'); cargar();
     } catch (err) {
-      alert(err.response?.data?.mensaje ?? 'Error al eliminar.');
+      mostrar(err.response?.data?.mensaje || 'No se pudo eliminar el rol.', 'error');
     }
   };
 
@@ -92,94 +98,70 @@ export default function Roles() {
       <div className="pg-header">
         <div className="pg-header__left">
           <p className="pg-tag">CU4</p>
-          <h1 className="pg-title">Gestionar Roles</h1>
-          <p className="pg-subtitle">Administración de roles del sistema</p>
+          <h1 className="pg-title">Gestión de Roles</h1>
+          <p className="pg-subtitle">Crea y administra los roles del sistema</p>
         </div>
-        <button className="pg-btn pg-btn--primary" onClick={abrirCrear}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Nuevo Rol
-        </button>
+        <div className="pg-header__actions">
+          <button className="pg-btn pg-btn--primary" onClick={abrirCrear}>+ Nuevo Rol</button>
+        </div>
       </div>
 
-      <div className="pg-filters">
-        <input placeholder="Buscar rol..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 250 }} />
-        <button className="pg-btn pg-btn--ghost" onClick={() => setSearch('')}>Limpiar</button>
-      </div>
+      {alerta.msg && <div className={`pg-alert ${alerta.tipo === 'error' ? 'pg-alert--error' : 'pg-alert--success'}`}>{alerta.msg}</div>}
 
       <div className="pg-table-wrap">
         {loading ? <div className="pg-loading">Cargando...</div> : (
           <table className="pg-table">
             <thead>
-              <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Permisos</th><th>Acciones</th></tr>
+              <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Permisos asignados</th><th>Acciones</th></tr>
             </thead>
             <tbody>
-              {roles.filter(r => search === '' || r.nombre.toLowerCase().includes(search.toLowerCase())).length === 0
-                ? <tr><td colSpan={5} className="pg-empty">Sin roles</td></tr>
-                : roles.filter(r => search === '' || r.nombre.toLowerCase().includes(search.toLowerCase())).map(r => (
-                  <tr key={r.id}>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{r.id}</td>
-                    <td>{r.nombre}</td>
-                    <td style={{ fontSize: '0.78rem', color: '#6b7280', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.descripcion ?? '—'}</td>
-                    <td><span className="pg-badge pg-badge--activo">{r.permisos?.length ?? 0} permisos</span></td>
-                    <td>
-                      <div className="pg-actions">
-                        <button className="pg-act-btn pg-act-btn--edit" onClick={() => abrirEditar(r)} title="Editar">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        <button className="pg-act-btn pg-act-btn--delete" onClick={() => eliminar(r.id, r.nombre)} title="Eliminar">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M9 6V4h6v2" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+              {roles.length === 0 ? (
+                <tr><td colSpan={5} className="pg-empty">Sin roles</td></tr>
+              ) : roles.map(r => (
+                <tr key={r.id}>
+                  <td style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>{r.id}</td>
+                  <td style={{ fontWeight: 700 }}>{r.nombre}</td>
+                  <td style={{ fontSize: '0.82rem', color: '#6b7280' }}>{r.descripcion ?? <span style={{ color: '#d1d5db' }}>—</span>}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 380 }}>
+                      {(r.permisos ?? []).length === 0 ? (
+                        <span style={{ fontSize: '0.72rem', color: '#9ca3af' }}>Sin permisos</span>
+                      ) : (r.permisos ?? []).map(p => (
+                        <span key={p.id} style={{ background: '#f3f4f6', color: '#374151', padding: '1px 7px', borderRadius: 99, fontSize: '0.68rem', border: '1px solid #e5e7eb' }}>{p.descripcion}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="pg-btn pg-btn--ghost" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={() => abrirEditar(r)}>Editar</button>
+                      <button style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5', borderRadius: 5, cursor: 'pointer' }} onClick={() => eliminar(r)}>Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </div>
 
       {modal && (
-        <div className="pg-overlay" onClick={cerrar}>
-          <div className="pg-modal" onClick={e => e.stopPropagation()}>
-            <div className="pg-modal__header">
-              <h3>{editingId ? 'Editar Rol' : 'Nuevo Rol'}</h3>
-              <button className="pg-modal__close" onClick={cerrar}>✕</button>
+        <Modal titulo={editando ? `Editar Rol: ${editando.nombre}` : 'Nuevo Rol'} onClose={cerrar}>
+          {errors._general && <div style={{ background: '#fee2e2', color: '#b91c1c', borderRadius: 5, padding: '8px 12px', fontSize: '0.82rem', marginBottom: '0.75rem' }}>{errors._general}</div>}
+          <form onSubmit={handleSubmit}>
+            {campo('Nombre del rol *', (
+              <input name="nombre" value={form.nombre} onChange={handleChange} required style={inp(errors.nombre)} placeholder="Ej: Coordinador Académico" />
+            ), errors.nombre)}
+            {campo('Descripción', (
+              <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={3} style={{ ...inp(), resize: 'vertical' }} placeholder="Descripción opcional del rol..." />
+            ), errors.descripcion)}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button type="button" className="pg-btn pg-btn--ghost" onClick={cerrar}>Cancelar</button>
+              <button type="submit" className="pg-btn pg-btn--primary" disabled={saving}>
+                {saving ? 'Guardando...' : editando ? 'Guardar cambios' : 'Crear rol'}
+              </button>
             </div>
-            <form onSubmit={guardar}>
-              <div className="pg-modal__body">
-                {error && <div className="pg-alert pg-alert--error">{error}</div>}
-                {success && <div className="pg-alert pg-alert--success">{success}</div>}
-                <div className="pg-form-grid">
-                  <div className="pg-field">
-                    <label>Nombre del Rol *</label>
-                    <input value={form.nombre}
-                      onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
-                      placeholder="Ej: Supervisor" required />
-                  </div>
-                  <div className="pg-field">
-                    <label>Descripción (opcional)</label>
-                    <textarea value={form.descripcion}
-                      onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))}
-                      placeholder="Ej: Supervisa operaciones del sistema"
-                      style={{ resize: 'vertical', minHeight: 80 }} />
-                  </div>
-                </div>
-              </div>
-              <div className="pg-modal__footer">
-                <button type="button" className="pg-btn pg-btn--ghost" onClick={cerrar}>Cancelar</button>
-                <button type="submit" className="pg-btn pg-btn--primary" disabled={saving}>
-                  {saving ? 'Guardando...' : (editingId ? 'Actualizar Rol' : 'Crear Rol')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

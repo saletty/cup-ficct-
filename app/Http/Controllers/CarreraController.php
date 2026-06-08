@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carrera;
+use App\Models\Postulacion;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,9 +59,13 @@ class CarreraController extends Controller
     {
         $carrera = Carrera::findOrFail($id);
 
-        // Verificar que no tenga postulantes inscritos
-        if ($carrera->postulaciones()->exists() ?? false) {
-            return response()->json(['mensaje' => 'No se puede eliminar: la carrera tiene postulaciones activas.'], 409);
+        // Verificar que no tenga postulantes inscritos en esta carrera
+        $tieneReferencias = Postulacion::where('carrera_opcion1_id', $id)
+            ->orWhere('carrera_opcion2_id', $id)
+            ->exists();
+
+        if ($tieneReferencias) {
+            return response()->json(['mensaje' => 'No se puede eliminar: hay postulaciones que referencian esta carrera.'], 409);
         }
 
         BitacoraService::log("Carrera eliminada: {$carrera->nombre_carrera}");

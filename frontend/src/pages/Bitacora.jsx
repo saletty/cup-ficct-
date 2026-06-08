@@ -10,13 +10,14 @@ export default function Bitacora() {
   const [registros, setRegistros] = useState([]);
   const [meta, setMeta]           = useState({});
   const [loading, setLoading]     = useState(true);
-  const [filtros, setFiltros]     = useState({ accion: '', desde: '', hasta: '' });
+  const [filtros, setFiltros]     = useState({ accion: '', desde: '' });
   const [page, setPage]           = useState(1);
 
-  const cargar = async (p = 1) => {
+  const cargar = async (p = 1, filtrosBase = null) => {
     setLoading(true);
+    const f = filtrosBase ?? filtros;
     try {
-      const params = { page: p, ...Object.fromEntries(Object.entries(filtros).filter(([,v]) => v)) };
+      const params = { page: p, ...Object.fromEntries(Object.entries(f).filter(([,v]) => v)) };
       const { data } = await client.get('/bitacora', { params });
       setRegistros(data.data);
       setMeta({ total: data.total, lastPage: data.last_page, perPage: data.per_page });
@@ -50,10 +51,9 @@ export default function Bitacora() {
       {/* Filtros */}
       <div className="pg-filters">
         <input name="accion" placeholder="Buscar acción..." value={filtros.accion} onChange={handleFiltro} />
-        <input name="desde" type="date" value={filtros.desde} onChange={handleFiltro} title="Desde" />
-        <input name="hasta" type="date" value={filtros.hasta} onChange={handleFiltro} title="Hasta" />
+        <input name="desde" type="date" value={filtros.desde} onChange={handleFiltro} title="Desde fecha" />
         <button className="pg-btn pg-btn--primary" onClick={() => cargar(1)}>Filtrar</button>
-        <button className="pg-btn pg-btn--ghost" onClick={() => { setFiltros({ accion:'', desde:'', hasta:'' }); cargar(1); }}>Limpiar</button>
+        <button className="pg-btn pg-btn--ghost" onClick={() => { const vacios = { accion: '', desde: '' }; setFiltros(vacios); cargar(1, vacios); }}>Limpiar</button>
       </div>
 
       <div className="pg-table-wrap">
