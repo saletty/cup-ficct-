@@ -69,7 +69,7 @@ class PasswordController extends Controller
                 new RestablecerPasswordMail($usuario->nombre_completo, $token, $usuario->CI)
             );
         } catch (\Throwable $e) {
-            \Log::error('[password/solicitar] falló: ' . $e->getMessage());
+            error_log('[password/solicitar] ' . get_class($e) . ': ' . $e->getMessage());
         }
 
         return response()->json($respuesta);
