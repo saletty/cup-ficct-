@@ -134,9 +134,10 @@ export default function MisResultados() {
             </div>
 
             <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '1rem' }}>
-              <NotaBar valor={ev.nota_examen1} label="Examen 1 — Computación" />
-              <NotaBar valor={ev.nota_examen2} label="Examen 2 — Matemáticas / Inglés" />
-              <NotaBar valor={ev.nota_examen3} label="Examen 3 — Física" />
+              <NotaBar valor={ev.nota_examen1} label="Computación" />
+              <NotaBar valor={ev.nota_examen2} label="Matemáticas" />
+              <NotaBar valor={ev.nota_examen3} label="Inglés" />
+              <NotaBar valor={ev.nota_examen4} label="Física" />
             </div>
           </div>
         ))

@@ -43,15 +43,10 @@ class EvaluacionController extends Controller
             'nota_examen1'  => ['required', 'numeric', 'min:0', 'max:100'],
             'nota_examen2'  => ['required', 'numeric', 'min:0', 'max:100'],
             'nota_examen3'  => ['required', 'numeric', 'min:0', 'max:100'],
+            'nota_examen4'  => ['required', 'numeric', 'min:0', 'max:100'],
         ], [
             'postulante_ci.exists' => 'El postulante no está registrado.',
             'examen_id.exists'     => 'El examen no existe.',
-            'nota_examen1.min'     => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen1.max'     => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen2.min'     => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen2.max'     => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen3.min'     => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen3.max'     => 'Las notas deben estar entre 0 y 100.',
         ]);
 
         // Aplicar Regla de Nota Mínima y calcular promedio
@@ -59,6 +54,7 @@ class EvaluacionController extends Controller
             (float) $data['nota_examen1'],
             (float) $data['nota_examen2'],
             (float) $data['nota_examen3'],
+            (float) $data['nota_examen4'],
         );
 
         $evaluacion = DB::transaction(function () use ($data, $calculado) {
@@ -92,19 +88,14 @@ class EvaluacionController extends Controller
             'nota_examen1' => ['required', 'numeric', 'min:0', 'max:100'],
             'nota_examen2' => ['required', 'numeric', 'min:0', 'max:100'],
             'nota_examen3' => ['required', 'numeric', 'min:0', 'max:100'],
-        ], [
-            'nota_examen1.min' => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen1.max' => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen2.min' => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen2.max' => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen3.min' => 'Las notas deben estar entre 0 y 100.',
-            'nota_examen3.max' => 'Las notas deben estar entre 0 y 100.',
+            'nota_examen4' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $calculado = Evaluacion::calcular(
             (float) $data['nota_examen1'],
             (float) $data['nota_examen2'],
             (float) $data['nota_examen3'],
+            (float) $data['nota_examen4'],
         );
 
         DB::transaction(function () use ($evaluacion, $data, $calculado) {

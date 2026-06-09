@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import client from '../api/client';
 import './pages.css';
 
-const EMPTY = { postulante_ci: '', examen_id: '', nota_examen1: '', nota_examen2: '', nota_examen3: '' };
+const EMPTY = { postulante_ci: '', examen_id: '', nota_examen1: '', nota_examen2: '', nota_examen3: '', nota_examen4: '' };
 
 const BADGE_ESTADO = {
   aprobado:  'pg-badge--aprobado',
@@ -49,7 +49,7 @@ export default function Evaluaciones() {
   const abrirCrear = () => { setForm(EMPTY); setError(''); setModal('crear'); };
   const abrirEditar = (ev) => {
     setEvalSel(ev);
-    setForm({ id: ev.id, nota_examen1: ev.nota_examen1, nota_examen2: ev.nota_examen2, nota_examen3: ev.nota_examen3 });
+    setForm({ id: ev.id, nota_examen1: ev.nota_examen1, nota_examen2: ev.nota_examen2, nota_examen3: ev.nota_examen3, nota_examen4: ev.nota_examen4 });
     setError(''); setModal('editar');
   };
 
@@ -58,9 +58,10 @@ export default function Evaluaciones() {
     const n1 = Number(form.nota_examen1);
     const n2 = Number(form.nota_examen2);
     const n3 = Number(form.nota_examen3);
-    if (!form.nota_examen1 || !form.nota_examen2 || !form.nota_examen3) return null;
-    const reprobado = n1 < 60 || n2 < 60 || n3 < 60;
-    const promedio  = ((n1 + n2 + n3) / 3).toFixed(2);
+    const n4 = Number(form.nota_examen4);
+    if (!form.nota_examen1 || !form.nota_examen2 || !form.nota_examen3 || !form.nota_examen4) return null;
+    const reprobado = n1 < 60 || n2 < 60 || n3 < 60 || n4 < 60;
+    const promedio  = ((n1 + n2 + n3 + n4) / 4).toFixed(2);
     return { promedio, estado: reprobado ? 'reprobado' : 'aprobado' };
   };
 
@@ -74,12 +75,14 @@ export default function Evaluaciones() {
           nota_examen1:  Number(form.nota_examen1),
           nota_examen2:  Number(form.nota_examen2),
           nota_examen3:  Number(form.nota_examen3),
+          nota_examen4:  Number(form.nota_examen4),
         });
       } else {
         await client.put(`/evaluaciones/${evalSel.id}`, {
           nota_examen1: Number(form.nota_examen1),
           nota_examen2: Number(form.nota_examen2),
           nota_examen3: Number(form.nota_examen3),
+          nota_examen4: Number(form.nota_examen4),
         });
       }
       cargar(); cerrar();
@@ -126,13 +129,13 @@ export default function Evaluaciones() {
             <thead>
               <tr>
                 <th>Postulante</th><th>CI</th><th>Examen</th>
-                <th>N1 (Comp.)</th><th>N2 (Mat./Ing.)</th><th>N3 (Fís.)</th>
+                <th>N1 Comp.</th><th>N2 Mat.</th><th>N3 Ing.</th><th>N4 Fís.</th>
                 <th>Promedio</th><th>Estado</th><th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {evals.length === 0
-                ? <tr><td colSpan={9} className="pg-empty">No hay evaluaciones registradas</td></tr>
+                ? <tr><td colSpan={10} className="pg-empty">No hay evaluaciones registradas</td></tr>
                 : evals.map(ev => (
                   <tr key={ev.id}>
                     <td style={{ fontWeight: 600 }}>{ev.postulante?.usuario?.nombre_completo ?? '—'}</td>
@@ -146,6 +149,9 @@ export default function Evaluaciones() {
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 600, color: ev.nota_examen3 < 60 ? '#dc2626' : '#166534' }}>
                       {ev.nota_examen3}
+                    </td>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: ev.nota_examen4 < 60 ? '#dc2626' : '#166534' }}>
+                      {ev.nota_examen4}
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 700 }}>{ev.promedio_final}</td>
                     <td>
@@ -213,37 +219,38 @@ export default function Evaluaciones() {
 
                   <div className="pg-form-grid pg-form-grid-2">
                     <div className="pg-field">
-                      <label>Nota Examen 1 — Computación *</label>
+                      <label>Computación *</label>
                       <input type="number" min="0" max="100" step="0.01" value={form.nota_examen1}
                         onChange={e => set('nota_examen1', e.target.value)} placeholder="0 – 100" required />
                     </div>
                     <div className="pg-field">
-                      <label>Nota Examen 2 — Matemáticas/Inglés *</label>
+                      <label>Matemáticas *</label>
                       <input type="number" min="0" max="100" step="0.01" value={form.nota_examen2}
                         onChange={e => set('nota_examen2', e.target.value)} placeholder="0 – 100" required />
                     </div>
-                  </div>
-                  <div className="pg-form-grid pg-form-grid-2">
                     <div className="pg-field">
-                      <label>Nota Examen 3 — Física *</label>
+                      <label>Inglés *</label>
                       <input type="number" min="0" max="100" step="0.01" value={form.nota_examen3}
                         onChange={e => set('nota_examen3', e.target.value)} placeholder="0 – 100" required />
                     </div>
-                    {calculo && (
-                      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                        <div style={{
-                          border: `2px solid ${calculo.estado === 'aprobado' ? '#86efac' : '#fca5a5'}`,
-                          borderRadius: 6, padding: '10px 12px',
-                          background: calculo.estado === 'aprobado' ? '#f0fdf4' : '#fff1f2',
-                        }}>
-                          <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vista previa</div>
-                          <div style={{ fontSize: '1.15rem', fontWeight: 700, color: calculo.estado === 'aprobado' ? '#15803d' : '#dc2626' }}>
-                            {calculo.promedio} — {calculo.estado}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    <div className="pg-field">
+                      <label>Física *</label>
+                      <input type="number" min="0" max="100" step="0.01" value={form.nota_examen4}
+                        onChange={e => set('nota_examen4', e.target.value)} placeholder="0 – 100" required />
+                    </div>
                   </div>
+                  {calculo && (
+                    <div style={{
+                      border: `2px solid ${calculo.estado === 'aprobado' ? '#86efac' : '#fca5a5'}`,
+                      borderRadius: 6, padding: '10px 12px',
+                      background: calculo.estado === 'aprobado' ? '#f0fdf4' : '#fff1f2',
+                    }}>
+                      <div style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vista previa</div>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 700, color: calculo.estado === 'aprobado' ? '#15803d' : '#dc2626' }}>
+                        {calculo.promedio} — {calculo.estado}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="pg-modal__footer">
