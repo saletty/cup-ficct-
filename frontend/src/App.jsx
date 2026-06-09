@@ -86,10 +86,14 @@ function App() {
     } catch { return null; }
   });
 
-  const [page, setPage] = useState('dashboard');
+  const esCajero = auth?.usuario?.rol === 'Cajero';
+  const [page, setPage] = useState(() => auth?.usuario?.rol === 'Cajero' ? 'pagos' : 'dashboard');
 
-  const handleLogin  = (data) => { setAuth(data); setPage('dashboard'); };
-  const handleLogout = ()     => { setAuth(null); setPage('dashboard'); };
+  const handleLogin  = (data) => {
+    setAuth(data);
+    setPage(data.usuario?.rol === 'Cajero' ? 'pagos' : 'dashboard');
+  };
+  const handleLogout = () => { setAuth(null); setPage('dashboard'); };
 
   if (!auth) return <Login onLogin={handleLogin} />;
 
@@ -143,6 +147,42 @@ function App() {
   const handleSetPage = (key) => {
     if (puedeVer(key)) setPage(key);
   };
+
+  // Cajero: layout sin sidebar, solo Pagos
+  if (esCajero) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+        <header style={{
+          background: '#004B8D', color: '#fff',
+          padding: '0 28px', height: 56,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              style={{ width: 22, height: 22, opacity: 0.9 }}>
+              <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.01em' }}>CUP FICCT</span>
+            <span style={{ opacity: 0.55, fontSize: '0.78rem' }}>· Caja de Admisión</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '0.83rem' }}>
+            <span style={{ opacity: 0.85 }}>{auth.usuario?.nombre_completo}</span>
+            <button onClick={handleLogout} style={{
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+              color: '#fff', padding: '5px 14px', borderRadius: 6, cursor: 'pointer',
+              fontSize: '0.8rem', fontWeight: 500,
+            }}>
+              Cerrar sesión
+            </button>
+          </div>
+        </header>
+        <main style={{ flex: 1, padding: '2rem 2.5rem', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
+          <Pagos />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <Layout

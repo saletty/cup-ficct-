@@ -23,6 +23,8 @@ export default function Pagos() {
   const [tipos, setTipos]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [filtroEstado, setFiltro]   = useState('');
+  const [filtroFecha, setFiltroFecha] = useState('');
+  const [filtroTipo, setFiltroTipo]   = useState('');
   const [modal, setModal]           = useState(null); // null | 'crear' | 'estado'
   const [form, setForm]             = useState(EMPTY_FORM);
   const [pagoSel, setPagoSel]       = useState(null);
@@ -34,8 +36,7 @@ export default function Pagos() {
   const cargar = async () => {
     setLoading(true);
     try {
-      const params = filtroEstado ? { estado_pago: filtroEstado } : {};
-      const { data } = await client.get('/pagos', { params });
+      const { data } = await client.get('/pagos');
       setPagos(data);
     } catch { /* silencioso */ }
     finally { setLoading(false); }
@@ -46,8 +47,20 @@ export default function Pagos() {
     catch { /* silencioso */ }
   };
 
-  useEffect(() => { cargar(); }, [filtroEstado]);
+  useEffect(() => { cargar(); }, []);
   useEffect(() => { cargarTipos(); }, []);
+
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  const pagosFiltrados = pagos.filter(p => {
+    if (filtroEstado && p.estado_pago !== filtroEstado) return false;
+    if (filtroTipo   && String(p.tipopago_id) !== filtroTipo) return false;
+    if (filtroFecha) {
+      const fechaPago = p.fecha_pago ? p.fecha_pago.slice(0, 10) : null;
+      if (fechaPago !== filtroFecha) return false;
+    }
+    return true;
+  });
 
   const abrirCrear = () => { setForm(EMPTY_FORM); setError(''); setModal('crear'); };
   const cerrar = () => { setModal(null); setError(''); setPagoSel(null); };
@@ -104,7 +117,7 @@ export default function Pagos() {
         <div className="pg-header__left">
           <p className="pg-tag">CU16</p>
           <h1 className="pg-title">Pagos de Admisión</h1>
-          <p className="pg-subtitle">{pagos.length} pago(s) registrado(s)</p>
+          <p className="pg-subtitle">{pagosFiltrados.length} pago(s) encontrado(s)</p>
         </div>
         <button className="pg-btn pg-btn--primary" onClick={abrirCrear}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -114,14 +127,49 @@ export default function Pagos() {
         </button>
       </div>
 
-      {/* Filtro por estado */}
-      <div className="pg-filters">
+      {/* Filtros */}
+      <div className="pg-filters" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
         <select value={filtroEstado} onChange={e => setFiltro(e.target.value)}>
           <option value="">Todos los estados</option>
           {ESTADOS.map(e => (
             <option key={e} value={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</option>
           ))}
         </select>
+
+        <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
+          <option value="">Todos los tipos</option>
+          {tipos.map(t => (
+            <option key={t.id} value={String(t.id)}>{t.descripcion}</option>
+          ))}
+        </select>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <input
+            type="date"
+            value={filtroFecha}
+            onChange={e => setFiltroFecha(e.target.value)}
+            style={{ padding: '7px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.85rem', color: '#374151' }}
+          />
+          <button
+            onClick={() => setFiltroFecha(hoy)}
+            style={{
+              padding: '7px 12px', borderRadius: 6, border: '1.5px solid #e5e7eb',
+              background: filtroFecha === hoy ? '#004B8D' : '#fff',
+              color: filtroFecha === hoy ? '#fff' : '#374151',
+              fontSize: '0.8rem', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap',
+            }}
+          >
+            Hoy
+          </button>
+          {filtroFecha && (
+            <button
+              onClick={() => setFiltroFecha('')}
+              style={{ padding: '7px 10px', borderRadius: 6, border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: '0.8rem', cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="pg-table-wrap">
@@ -141,9 +189,9 @@ export default function Pagos() {
               </tr>
             </thead>
             <tbody>
-              {pagos.length === 0
-                ? <tr><td colSpan={9} className="pg-empty">No hay pagos registrados</td></tr>
-                : pagos.map(p => (
+              {pagosFiltrados.length === 0
+                ? <tr><td colSpan={9} className="pg-empty">No hay pagos para los filtros seleccionados</td></tr>
+                : pagosFiltrados.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: '#9ca3af', fontSize: '0.78rem' }}>{p.id}</td>
                     <td style={{ fontWeight: 600 }}>{nombrePostulante(p)}</td>
