@@ -72,11 +72,11 @@ class DocenteController extends Controller
             'profesion'                    => ['sometimes', 'string', 'max:100'],
             'maestria'                     => ['sometimes', 'string', 'max:150'],
             'diplomado_educacion_superior' => ['sometimes', 'string', 'max:150'],
-            'estado'                       => ['sometimes', 'in:ACTIVO,INACTIVO,BLOQUEADO'],
+            'estado'                       => ['sometimes', 'in:ACTIVO,INACTIVO,BLOQUEADO,activo,inactivo,bloqueado'],
         ]);
 
         if (isset($data['estado'])) {
-            $docente->usuario->update(['estado' => $data['estado']]);
+            $docente->usuario->update(['estado' => strtoupper($data['estado'])]);
             unset($data['estado']);
         }
         $docente->update($data);

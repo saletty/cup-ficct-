@@ -43,7 +43,7 @@ export default function Docentes() {
 
   const abrirCrear  = () => { setForm(EMPTY_DOC); setError(''); setModal('crear'); };
   const abrirEditar = (d) => {
-    setForm({ CI: d.CI, materia_id: d.materia_id ?? '', profesion: d.profesion, maestria: d.maestria, diplomado_educacion_superior: d.diplomado_educacion_superior, estado: d.usuario?.estado ?? 'ACTIVO' });
+    setForm({ CI: d.CI, materia_id: d.materia_id ?? '', profesion: d.profesion, maestria: d.maestria, diplomado_educacion_superior: d.diplomado_educacion_superior, estado: (d.usuario?.estado ?? 'ACTIVO').toUpperCase() });
     setError(''); setModal('editar');
   };
   const cerrar = () => { setModal(null); setError(''); setCarga(null); };
