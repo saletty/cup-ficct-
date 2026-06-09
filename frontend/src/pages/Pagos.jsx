@@ -4,6 +4,7 @@
 // estados: pendiente → verificado | rechazado
 // ============================================================
 import { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import client from '../api/client';
 import './pages.css';
 
@@ -401,32 +402,56 @@ export default function Pagos() {
               <h3>Esperando Pago QR</h3>
             </div>
             <div className="pg-modal__body" style={{ padding: '2rem 1.5rem' }}>
-              {/* Spinner */}
-              <div style={{ margin: '0 auto 1.5rem', width: 56, height: 56 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="#004B8D" strokeWidth="2"
-                  style={{ width: 56, height: 56, animation: 'spin 1.2s linear infinite' }}>
-                  <path strokeLinecap="round" d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2" opacity=".25"/>
-                  <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10" opacity=".85"/>
-                </svg>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1a1a1a', marginBottom: 6 }}>
-                Bs 700.00 — Pago QR
-              </div>
-              <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '1.25rem' }}>
-                Pago ID: <strong>#{pollingPagoId}</strong>
+              {/* QR Code */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div style={{ padding: 12, background: '#fff', border: '2px solid #e5e7eb', borderRadius: 12, marginBottom: '0.75rem', position: 'relative' }}>
+                  <QRCodeSVG
+                    value={`libelula://pago?id=${pollingPagoId}&monto=700&moneda=BOB&ref=CUP-${pollingPagoId}`}
+                    size={160}
+                    bgColor="#ffffff"
+                    fgColor="#004B8D"
+                    level="M"
+                  />
+                  {/* Spinner de "verificando" sobre el QR */}
+                  <div style={{ position: 'absolute', bottom: -10, right: -10,
+                    background: '#fff', borderRadius: '50%', padding: 3,
+                    border: '1.5px solid #e5e7eb', lineHeight: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#004B8D" strokeWidth="2.5"
+                      style={{ width: 20, height: 20, animation: 'spin 1.2s linear infinite' }}>
+                      <path strokeLinecap="round" d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2" opacity=".2"/>
+                      <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10"/>
+                    </svg>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 700, fontSize: '1.15rem', color: '#1a1a1a' }}>Bs 700.00</div>
+                <div style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 2 }}>
+                  Pago ID: <strong>#{pollingPagoId}</strong>
+                </div>
               </div>
               <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
                             padding: '10px 14px', fontSize: '0.78rem', color: '#1e40af', marginBottom: '1rem' }}>
                 El sistema verifica automáticamente cada 3 segundos.<br/>
                 Intento {pollingTick} / 60
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                Para simular en local, ejecuta en la terminal:<br/>
-                <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: 4,
-                               fontSize: '0.72rem', userSelect: 'all' }}>
-                  php simular_banco.php {pollingPagoId}
-                </code>
-              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    await client.post('/pagos/webhook', {
+                      pago_id: pollingPagoId,
+                      estado:  'COMPLETED',
+                    }, {
+                      headers: { 'X-Libelula-Token': 'libelula_sandbox_2026' },
+                    });
+                  } catch { /* el polling detecta el cambio igual */ }
+                }}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: 8, cursor: 'pointer',
+                  background: '#f0fdf4', border: '1.5px solid #86efac',
+                  color: '#15803d', fontWeight: 600, fontSize: '0.85rem',
+                }}
+              >
+                Simular pago exitoso (sandbox)
+              </button>
             </div>
             <div className="pg-modal__footer" style={{ justifyContent: 'center' }}>
               <button className="pg-btn pg-btn--ghost" onClick={() => {

@@ -91,13 +91,11 @@ class DatabaseSeeder extends Seeder
             ])->pluck('id')
         );
 
-        // Cajero: dashboard, postulantes (consulta), pagos
+        // Cajero: solo dashboard y pagos
         $cajero->permisos()->sync(
             Permiso::whereIn('descripcion', [
                 'Ver dashboard',
-                'Gestionar postulantes',
                 'Gestionar pagos',
-                'Ver reportes',
             ])->pluck('id')
         );
 
