@@ -3,7 +3,7 @@
 // El cajero registra pagos (700 Bs) y gestiona su estado.
 // estados: pendiente → verificado | rechazado
 // ============================================================
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import client from '../api/client';
 import './pages.css';
 
@@ -31,6 +31,9 @@ export default function Pagos() {
   const [observacion, setObserv]    = useState('');
   const [error, setError]           = useState('');
   const [saving, setSaving]         = useState(false);
+  const [pollingPagoId, setPolling] = useState(null);   // ID del pago QR en espera
+  const [pollingTick, setTick]      = useState(0);      // cuenta de intentos visibles
+  const pollingRef                  = useRef(null);
 
   const cargar = async () => {
     setLoading(true);
@@ -48,6 +51,66 @@ export default function Pagos() {
 
   useEffect(() => { cargar(); }, []);
   useEffect(() => { cargarTipos(); }, []);
+
+  // Polling: verifica cada 3s si el pago QR fue confirmado por Libélula
+  useEffect(() => {
+    if (!pollingPagoId) return;
+
+    let intentos = 0;
+    const MAX    = 60; // 3 min máximo
+
+    pollingRef.current = setInterval(async () => {
+      intentos++;
+      setTick(intentos);
+
+      if (intentos > MAX) {
+        clearInterval(pollingRef.current);
+        setPolling(null);
+        alert('Tiempo de espera agotado. El pago QR no fue confirmado en 3 minutos.');
+        return;
+      }
+
+      try {
+        const { data } = await client.get(`/pagos/${pollingPagoId}/estado`);
+        if (data.estado_pago === 'verificado') {
+          clearInterval(pollingRef.current);
+          setPolling(null);
+          cargar();
+          mostrarExito();
+        }
+      } catch { /* silencioso */ }
+    }, 3000);
+
+    return () => clearInterval(pollingRef.current);
+  }, [pollingPagoId]);
+
+  const mostrarExito = () => {
+    // Alerta estética usando un div temporal
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.5);
+      display:flex;align-items:center;justify-content:center;z-index:9999;
+    `;
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2.5rem 3rem;text-align:center;
+                  box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:360px;">
+        <div style="font-size:3rem;margin-bottom:1rem;">✓</div>
+        <div style="font-size:1.4rem;font-weight:800;color:#15803d;margin-bottom:0.5rem;">
+          ¡Pago Confirmado!
+        </div>
+        <div style="color:#6b7280;font-size:0.9rem;margin-bottom:1.5rem;">
+          Libélula confirmó el pago de <strong>Bs 700.00</strong>.
+        </div>
+        <button onclick="this.closest('div[style]').parentElement.remove()"
+          style="background:#15803d;color:#fff;border:none;padding:10px 28px;
+                 border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;">
+          Aceptar
+        </button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 8000);
+  };
 
   const hoy = new Date().toISOString().slice(0, 10);
 
@@ -68,13 +131,24 @@ export default function Pagos() {
 
   const registrar = async (e) => {
     e.preventDefault(); setSaving(true); setError('');
+    const esQR = Number(form.tipopago_id) === 2;
     try {
-      await client.post('/pagos', {
-        postulante_ci: Number(form.postulante_ci),
-        tipopago_id:   Number(form.tipopago_id),
-        observacion:   form.observacion || null,
-      });
-      cargar(); cerrar();
+      if (esQR) {
+        // Usar endpoint dedicado para QR — inicia polling automáticamente
+        const { data } = await client.post('/pagos/iniciar-qr', {
+          postulante_ci: Number(form.postulante_ci),
+        });
+        cerrar();
+        setTick(0);
+        setPolling(data.pago_id);
+      } else {
+        await client.post('/pagos', {
+          postulante_ci: Number(form.postulante_ci),
+          tipopago_id:   Number(form.tipopago_id),
+          observacion:   form.observacion || null,
+        });
+        cargar(); cerrar();
+      }
     } catch (err) {
       const msgs = err.response?.data?.errors;
       setError(msgs ? Object.values(msgs).flat().join(' · ') : err.response?.data?.mensaje ?? 'Error al registrar el pago.');
@@ -315,6 +389,52 @@ export default function Pagos() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Esperando confirmación QR de Libélula */}
+      {pollingPagoId && (
+        <div className="pg-overlay">
+          <div className="pg-modal" style={{ maxWidth: 400, textAlign: 'center' }}>
+            <div className="pg-modal__header" style={{ justifyContent: 'center' }}>
+              <h3>Esperando Pago QR</h3>
+            </div>
+            <div className="pg-modal__body" style={{ padding: '2rem 1.5rem' }}>
+              {/* Spinner */}
+              <div style={{ margin: '0 auto 1.5rem', width: 56, height: 56 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#004B8D" strokeWidth="2"
+                  style={{ width: 56, height: 56, animation: 'spin 1.2s linear infinite' }}>
+                  <path strokeLinecap="round" d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2" opacity=".25"/>
+                  <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10" opacity=".85"/>
+                </svg>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1a1a1a', marginBottom: 6 }}>
+                Bs 700.00 — Pago QR
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#6b7280', marginBottom: '1.25rem' }}>
+                Pago ID: <strong>#{pollingPagoId}</strong>
+              </div>
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
+                            padding: '10px 14px', fontSize: '0.78rem', color: '#1e40af', marginBottom: '1rem' }}>
+                El sistema verifica automáticamente cada 3 segundos.<br/>
+                Intento {pollingTick} / 60
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                Para simular en local, ejecuta en la terminal:<br/>
+                <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: 4,
+                               fontSize: '0.72rem', userSelect: 'all' }}>
+                  php simular_banco.php {pollingPagoId}
+                </code>
+              </div>
+            </div>
+            <div className="pg-modal__footer" style={{ justifyContent: 'center' }}>
+              <button className="pg-btn pg-btn--ghost" onClick={() => {
+                clearInterval(pollingRef.current); setPolling(null); cargar();
+              }}>
+                Cancelar espera
+              </button>
+            </div>
           </div>
         </div>
       )}

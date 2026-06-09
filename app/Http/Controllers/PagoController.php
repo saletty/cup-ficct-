@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pago;
+use App\Models\Postulacion;
 use App\Models\TipoPago;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 // ============================================================
 // CU16 — Gestionar Pagos de Admisión
@@ -119,6 +121,101 @@ class PagoController extends Controller
 
         return response()->json(['mensaje' => 'Pago eliminado.']);
     }
+
+    // ── SIMULACIÓN LIBÉLULA ──────────────────────────────────────
+
+    // POST /v1/pagos/iniciar-qr
+    // Registra la intención de pago QR (700 Bs, tipopago_id=2) y retorna el pago_id
+    // para que el frontend inicie el polling.
+    public function iniciarQR(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'postulante_ci' => ['required', 'integer'],
+        ]);
+
+        $pago = DB::transaction(function () use ($data) {
+            return Pago::create([
+                'postulante_ci' => $data['postulante_ci'],
+                'tipopago_id'   => 2,
+                'monto'         => 700.00,
+                'estado_pago'   => 'pendiente',
+                'fecha_pago'    => now(),
+                'cajero_ci'     => auth()->user()->getKey(),
+                'observacion'   => 'Pago QR — pendiente de confirmación Libélula',
+            ]);
+        });
+
+        BitacoraService::log(
+            "Pago QR iniciado: CI={$data['postulante_ci']}, pago_id={$pago->id}, monto=700 Bs"
+        );
+
+        return response()->json([
+            'pago_id' => $pago->id,
+            'monto'   => 700.00,
+            'estado'  => 'pendiente',
+            'mensaje' => 'Intención de pago QR registrada. Esperando confirmación de Libélula.',
+        ], 201);
+    }
+
+    // POST /v1/pagos/webhook  (endpoint público — lo llama Libélula o el simulador)
+    // Valida el token secreto, luego en una transacción actualiza el pago
+    // a 'verificado' y la postulación a 'pendiente'.
+    public function webhookLibelula(Request $request): JsonResponse
+    {
+        $secretEsperado = config('services.libelula.webhook_secret', 'libelula_sandbox_2026');
+
+        if ($request->header('X-Libelula-Token') !== $secretEsperado) {
+            return response()->json(['error' => 'Token de webhook inválido.'], 401);
+        }
+
+        $data = $request->validate([
+            'pago_id' => ['required', 'integer', 'exists:pago,id'],
+            'estado'  => ['required', 'string'],
+        ]);
+
+        if ($data['estado'] !== 'COMPLETED') {
+            return response()->json(['mensaje' => "Estado '{$data['estado']}' recibido — sin acción."]);
+        }
+
+        try {
+            DB::transaction(function () use ($data) {
+                $pago = Pago::lockForUpdate()->findOrFail($data['pago_id']);
+
+                if ($pago->estado_pago === 'verificado') {
+                    return; // ya procesado (idempotencia)
+                }
+
+                $pago->update(['estado_pago' => 'verificado']);
+
+                // Actualizar la postulación más reciente del postulante (si existe)
+                Postulacion::where('postulante_ci', $pago->postulante_ci)
+                    ->whereNotIn('estado_admision', ['anulado'])
+                    ->latest('fecha_registro')
+                    ->limit(1)
+                    ->update(['estado_admision' => 'pendiente']);
+            });
+
+            BitacoraService::log(
+                "Webhook Libélula: pago_id={$data['pago_id']} → COMPLETED → verificado"
+            );
+
+            return response()->json(['mensaje' => 'Pago verificado y postulación actualizada.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error interno al procesar el webhook.'], 500);
+        }
+    }
+
+    // GET /v1/pagos/{id}/estado — polling del frontend para verificar si el pago fue confirmado
+    public function estadoPago(int $id): JsonResponse
+    {
+        $pago = Pago::select('id', 'estado_pago', 'fecha_pago', 'postulante_ci')
+            ->findOrFail($id);
+
+        return response()->json($pago);
+    }
+
+    // ────────────────────────────────────────────────────────────
 
     // GET /v1/pagos/postulante/{ci} — historial de pagos de un postulante
     public function porPostulante(int $ci): JsonResponse

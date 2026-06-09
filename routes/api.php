@@ -85,6 +85,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/password/solicitar',   [PasswordController::class, 'solicitar']);
     Route::post('/password/restablecer', [PasswordController::class, 'restablecer']);
 
+    // Webhook Libélula — público, validado por token secreto en cabecera
+    Route::post('/pagos/webhook', [PagoController::class, 'webhookLibelula']);
+
     Route::prefix('registro')->group(function () {
         Route::get('/carreras',      [RegistroController::class, 'carreras']);
         Route::post('/verificar-ci', [RegistroController::class, 'verificarCI']);
@@ -201,6 +204,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
     Route::middleware('permiso:Gestionar pagos')->group(function () {
         Route::get('/pagos',                      [PagoController::class, 'index']);
         Route::post('/pagos',                     [PagoController::class, 'store']);
+        Route::post('/pagos/iniciar-qr',          [PagoController::class, 'iniciarQR']);
+        Route::get('/pagos/{id}/estado',          [PagoController::class, 'estadoPago']);
         Route::get('/pagos/{id}',                 [PagoController::class, 'show']);
         Route::put('/pagos/{id}',                 [PagoController::class, 'update']);
         Route::delete('/pagos/{id}',              [PagoController::class, 'destroy']);
