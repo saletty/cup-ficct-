@@ -90,10 +90,12 @@ function App() {
 
   const esCajero   = auth?.usuario?.rol === 'Cajero';
   const esOperador = auth?.usuario?.rol === 'Operador';
+  const esDocente  = auth?.usuario?.rol === 'Docente';
 
   const defaultPage = (rol) => {
     if (rol === 'Cajero')   return 'pagos';
     if (rol === 'Operador') return 'ventanilla';
+    if (rol === 'Docente')  return 'carga-horaria';
     return 'dashboard';
   };
 
@@ -159,12 +161,18 @@ function App() {
     if (puedeVer(key)) setPage(key);
   };
 
-  // Cajero y Operador: layout sin sidebar, cabecera propia
-  if (esCajero || esOperador) {
-    const subtitulo   = esCajero ? '· Caja de Admisión' : '· Ventanilla de Registro';
+  // Cajero, Operador y Docente: layout sin sidebar, cabecera propia
+  if (esCajero || esOperador || esDocente) {
+    const subtitulo = esCajero  ? '· Caja de Admisión'
+                    : esDocente ? '· Carga Horaria'
+                    :             '· Ventanilla de Registro';
     const iconoCabeza = esCajero
       ? 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+      : esDocente
+      ? 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
       : 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z';
+
+    const contenido = esCajero ? <Pagos /> : esDocente ? <CargaHoraria /> : <Ventanilla />;
 
     return (
       <div style={{ minHeight: '100vh', background: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
@@ -194,7 +202,7 @@ function App() {
           </div>
         </header>
         <main style={{ flex: 1, padding: '2rem 2.5rem', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
-          {esCajero ? <Pagos /> : <Ventanilla />}
+          {contenido}
         </main>
       </div>
     );
