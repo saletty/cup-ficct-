@@ -57,6 +57,10 @@ return [
             ],
         ],
 
+        'brevo' => [
+            'transport' => 'brevo',
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

@@ -66,9 +66,13 @@ class PasswordController extends Controller
         // Token expira en 15 minutos
         Cache::put("pwd_reset_{$usuario->CI}", Hash::make($token), now()->addMinutes(15));
 
-        Mail::to($usuario->email)->send(
-            new RestablecerPasswordMail($usuario->nombre_completo, $token, $usuario->CI)
-        );
+        try {
+            Mail::to($usuario->email)->send(
+                new RestablecerPasswordMail($usuario->nombre_completo, $token, $usuario->CI)
+            );
+        } catch (\Exception) {
+            // El correo falló; el token sigue guardado en caché para reintento manual
+        }
 
         return response()->json($respuesta);
     }
