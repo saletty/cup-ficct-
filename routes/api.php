@@ -168,6 +168,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
     /* ── Operador + Cajero: gestionar postulantes (CU8, CU9) ── */
     Route::middleware('permiso:Gestionar postulantes')->group(function () {
         Route::post('/registro/operador',            [RegistroController::class, 'registrarCI']);
+        Route::get('/registro/estado-ci/{ci}',       [RegistroController::class, 'estadoCI']);
         Route::get('/postulantes',                   [PostulanteController::class, 'index']);
         Route::get('/postulantes/{ci}',              [PostulanteController::class, 'show']);
         Route::put('/postulantes/{ci}',              [PostulanteController::class, 'update']);

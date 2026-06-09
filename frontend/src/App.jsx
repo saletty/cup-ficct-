@@ -23,6 +23,7 @@ import MiInscripcionPostulante from './pages/MiInscripcionPostulante';
 import MisHorarios             from './pages/MisHorarios';
 import Usuarios                from './pages/Usuarios';
 import ControlAcceso           from './pages/ControlAcceso';
+import Ventanilla             from './pages/Ventanilla';
 
 /*
  * ================================================================
@@ -75,6 +76,7 @@ const PERMISOS_PAGINAS = {
   'mis-horarios':   null,
   reportes:         'Ver reportes',
   'control-acceso': 'Gestionar usuarios',
+  ventanilla:       'Gestionar postulantes',
 };
 
 function App() {
@@ -86,12 +88,20 @@ function App() {
     } catch { return null; }
   });
 
-  const esCajero = auth?.usuario?.rol === 'Cajero';
-  const [page, setPage] = useState(() => auth?.usuario?.rol === 'Cajero' ? 'pagos' : 'dashboard');
+  const esCajero   = auth?.usuario?.rol === 'Cajero';
+  const esOperador = auth?.usuario?.rol === 'Operador';
+
+  const defaultPage = (rol) => {
+    if (rol === 'Cajero')   return 'pagos';
+    if (rol === 'Operador') return 'ventanilla';
+    return 'dashboard';
+  };
+
+  const [page, setPage] = useState(() => defaultPage(auth?.usuario?.rol));
 
   const handleLogin  = (data) => {
     setAuth(data);
-    setPage(data.usuario?.rol === 'Cajero' ? 'pagos' : 'dashboard');
+    setPage(defaultPage(data.usuario?.rol));
   };
   const handleLogout = () => { setAuth(null); setPage('dashboard'); };
 
@@ -141,6 +151,7 @@ function App() {
     'mis-resultados': <MisResultados />,
     'mis-horarios':   <MisHorarios />,
     reportes:         <Reportes />,
+    ventanilla:       <Ventanilla />,
   };
 
   // setPage con guard incluido

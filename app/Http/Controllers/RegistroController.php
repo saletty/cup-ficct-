@@ -94,6 +94,32 @@ class RegistroController extends Controller
         ]);
     }
 
+    /* ── OPERADOR: consultar estado de un CI antes de habilitar ──────── */
+
+    public function estadoCI(int $ci): JsonResponse
+    {
+        $pago = Pago::where('postulante_ci', $ci)
+            ->where('estado_pago', '!=', 'rechazado')
+            ->with('tipoPago:id,descripcion')
+            ->orderByDesc('fecha_pago')
+            ->first();
+
+        $usuario = User::find($ci);
+
+        $puedeHabilitar = $pago && (! $usuario || $usuario->estado !== 'ACTIVO');
+
+        return response()->json([
+            'ci'              => $ci,
+            'tiene_pago'      => ! is_null($pago),
+            'estado_pago'     => $pago?->estado_pago,
+            'tipo_pago'       => $pago?->tipoPago?->descripcion,
+            'ya_registrado'   => ! is_null($usuario),
+            'estado_cuenta'   => $usuario?->estado,
+            'nombre'          => $usuario?->nombre_completo,
+            'puede_habilitar' => $puedeHabilitar,
+        ]);
+    }
+
     /* ── PASO 2a (estudiante): verificar CI antes del formulario ─────── */
 
     public function verificarCI(Request $request): JsonResponse
