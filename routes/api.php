@@ -57,6 +57,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AsignacionDocenteController;
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BitacoraController;
@@ -161,9 +162,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         ->middleware('permiso:Ver carga horaria propia,Gestionar docentes');
 
     /* ── Docente: registrar asistencia ── */
-    // (Endpoint futuro, ya protegido con el permiso)
-    // Route::post('/asistencia', [...])
-    //     ->middleware('permiso:Registrar asistencia');
+    Route::middleware('permiso:Registrar asistencia')->group(function () {
+        Route::get('/asistencia',  [AsistenciaController::class, 'index']);
+        Route::post('/asistencia', [AsistenciaController::class, 'store']);
+    });
 
     /* ── Operador + Cajero: gestionar postulantes (CU8, CU9) ── */
     Route::middleware('permiso:Gestionar postulantes')->group(function () {
