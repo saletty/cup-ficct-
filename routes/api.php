@@ -135,6 +135,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::post('/grupos/{grupoId}/{convocatoriaId}/horarios',               [GrupoController::class, 'agregarHorario']);
         Route::delete('/grupos/{grupoId}/{convocatoriaId}/horarios/{id}',        [GrupoController::class, 'quitarHorario']);
         Route::post('/grupos/{grupoId}/{convocatoriaId}/aplicar-turno',          [GrupoController::class, 'aplicarTurno']);
+        Route::post('/grupos/generar',                                            [GrupoController::class, 'generarGrupos']);
         Route::apiResource('aulas', AulaController::class)->parameters(['aulas' => 'nro']);
     });
 

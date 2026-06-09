@@ -34,12 +34,11 @@ class PagoController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'postulante_ci' => ['required', 'integer', 'exists:postulante,CI'],
+            'postulante_ci' => ['required', 'integer'],
             'tipopago_id'   => ['required', 'integer', 'exists:tipo_pago,id'],
             'observacion'   => ['nullable', 'string', 'max:500'],
         ], [
-            'postulante_ci.exists' => 'El postulante no está registrado en el sistema.',
-            'tipopago_id.exists'   => 'El tipo de pago seleccionado no existe.',
+            'tipopago_id.exists' => 'El tipo de pago seleccionado no existe.',
         ]);
 
         $tipoPago = TipoPago::findOrFail($data['tipopago_id']);
@@ -47,11 +46,14 @@ class PagoController extends Controller
             return response()->json(['mensaje' => 'El tipo de pago seleccionado está inactivo.'], 422);
         }
 
+        // Efectivo en caja se marca verificado de inmediato (el cajero ya contó el dinero)
+        $estadoInicial = ($tipoPago->nombre === 'Efectivo') ? 'verificado' : 'pendiente';
+
         $pago = Pago::create([
             'postulante_ci' => $data['postulante_ci'],
             'tipopago_id'   => $data['tipopago_id'],
             'monto'         => $tipoPago->monto,
-            'estado_pago'   => 'pendiente',
+            'estado_pago'   => $estadoInicial,
             'fecha_pago'    => now(),
             'cajero_ci'     => auth()->user()->getKey(),
             'observacion'   => $data['observacion'] ?? null,

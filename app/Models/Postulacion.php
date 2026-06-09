@@ -10,7 +10,7 @@ class Postulacion extends Model
     public $timestamps  = false;
 
     protected $fillable = [
-        'postulante_ci', 'convocatoria_id',
+        'postulante_ci', 'convocatoria_id', 'grupo_id',
         'carrera_opcion1_id', 'carrera_opcion2_id',
         'estado_admision', 'fecha_registro',
     ];

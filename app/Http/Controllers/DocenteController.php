@@ -17,7 +17,7 @@ class DocenteController extends Controller
 {
     public function index(): JsonResponse
     {
-        $docentes = Docente::with('usuario:CI,nombre_completo,email,estado')->get();
+        $docentes = Docente::with('usuario:CI,nombre_completo,email,estado', 'materia:id,nombre')->get();
         return response()->json($docentes);
     }
 
@@ -36,6 +36,7 @@ class DocenteController extends Controller
     {
         $data = $request->validate([
             'CI'                          => ['required', 'integer', 'unique:docente,CI'],
+            'materia_id'                  => ['nullable', 'integer', 'exists:materia,id'],
             'profesion'                   => ['required', 'string', 'max:100'],
             'maestria'                    => ['required', 'string', 'max:150'],
             'diplomado_educacion_superior' => ['required', 'string', 'max:150'],
@@ -58,7 +59,7 @@ class DocenteController extends Controller
 
         return response()->json([
             'mensaje' => 'Docente registrado correctamente.',
-            'docente' => $docente->load('usuario:CI,nombre_completo,email'),
+            'docente' => $docente->load('usuario:CI,nombre_completo,email', 'materia:id,nombre'),
         ], 201);
     }
 
@@ -67,6 +68,7 @@ class DocenteController extends Controller
         $docente = Docente::findOrFail($ci);
 
         $data = $request->validate([
+            'materia_id'                   => ['sometimes', 'nullable', 'integer', 'exists:materia,id'],
             'profesion'                    => ['sometimes', 'string', 'max:100'],
             'maestria'                     => ['sometimes', 'string', 'max:150'],
             'diplomado_educacion_superior' => ['sometimes', 'string', 'max:150'],
@@ -82,7 +84,7 @@ class DocenteController extends Controller
 
         return response()->json([
             'mensaje' => 'Datos del docente actualizados.',
-            'docente' => $docente->fresh()->load('usuario:CI,nombre_completo,email'),
+            'docente' => $docente->fresh()->load('usuario:CI,nombre_completo,email', 'materia:id,nombre'),
         ]);
     }
 

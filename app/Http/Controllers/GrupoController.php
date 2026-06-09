@@ -5,9 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Aula;
 use App\Models\Grupo;
 use App\Models\Horario;
+use App\Models\Postulacion;
+use App\Models\AsignacionDocente;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+// ============================================================
+// CU20 — Límite de estudiantes por grupo (compartido con ConvocatoriaController)
+const LIMITE_GRUPO = 70;
 
 // ============================================================
 // CU14 — Gestionar Grupos
@@ -256,6 +263,115 @@ class GrupoController extends Controller
         return response()->json([
             'mensaje'  => "Turno '{$data['turno']}' aplicado: {$plantillas->count()} horarios asignados.",
             'horarios' => $plantillas->count(),
+        ], 201);
+    }
+
+    /* ── Generación automática de grupos (CU20) ──────────────── */
+    public function generarGrupos(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'convocatoria_id'  => ['required', 'string', 'exists:convocatoria,id'],
+            'turnos'           => ['required', 'array'],
+            'turnos.mañana'    => ['required', 'integer', 'min:0'],
+            'turnos.tarde'     => ['required', 'integer', 'min:0'],
+            'turnos.noche'     => ['required', 'integer', 'min:0'],
+        ]);
+
+        $convId = $data['convocatoria_id'];
+
+        // Verificar que no existan grupos para esta convocatoria
+        if (Grupo::where('convocatoria_id', $convId)->exists()) {
+            return response()->json(['mensaje' => 'Ya existen grupos para esta convocatoria.'], 409);
+        }
+
+        // Calcular grupos necesarios
+        $totalInscritos = Postulacion::where('convocatoria_id', $convId)
+            ->whereNotIn('estado_admision', ['anulado'])
+            ->count();
+
+        $gruposNecesarios = $totalInscritos === 0 ? 0 : (int) ceil($totalInscritos / LIMITE_GRUPO);
+        $totalTurnos = ($data['turnos']['mañana'] ?? 0)
+                     + ($data['turnos']['tarde']  ?? 0)
+                     + ($data['turnos']['noche']  ?? 0);
+
+        if ($totalTurnos !== $gruposNecesarios) {
+            return response()->json([
+                'mensaje' => "La suma de turnos ({$totalTurnos}) debe ser igual a los grupos necesarios ({$gruposNecesarios}).",
+            ], 422);
+        }
+
+        // Construir lista de grupos a crear con sus turnos
+        $prefijos = ['mañana' => 'M', 'tarde' => 'T', 'noche' => 'N'];
+        $gruposACrear = [];
+        foreach ($prefijos as $turno => $prefijo) {
+            $cantidad = $data['turnos'][$turno] ?? 0;
+            for ($i = 1; $i <= $cantidad; $i++) {
+                $gruposACrear[] = ['id' => sprintf('%s%03d', $prefijo, $i), 'turno' => $turno];
+            }
+        }
+
+        DB::transaction(function () use ($gruposACrear, $convId) {
+            // 1. Crear grupos y aplicar horarios plantilla
+            foreach ($gruposACrear as $def) {
+                Grupo::create([
+                    'id'              => $def['id'],
+                    'convocatoria_id' => $convId,
+                    'carrera_id'      => null,
+                    'modalidad'       => 'presencial',
+                    'cupo_maximo'     => LIMITE_GRUPO,
+                    'estado'          => 'activo',
+                ]);
+
+                $plantillas = Horario::whereNull('grupo_id')->where('turno', $def['turno'])->get();
+                if ($plantillas->isNotEmpty()) {
+                    Horario::insert($plantillas->map(fn($p) => [
+                        'grupo_id'        => $def['id'],
+                        'convocatoria_id' => $convId,
+                        'dia'             => $p->dia,
+                        'hora_inicio'     => $p->hora_inicio,
+                        'hora_fin'        => $p->hora_fin,
+                        'aula_nro'        => $p->aula_nro,
+                        'turno'           => $p->turno,
+                    ])->toArray());
+                }
+            }
+
+            // 2. Distribuir postulantes en round-robin
+            $postulaciones = Postulacion::where('convocatoria_id', $convId)
+                ->whereNotIn('estado_admision', ['anulado'])
+                ->pluck('id')
+                ->toArray();
+
+            $grupoIds = array_column($gruposACrear, 'id');
+            foreach ($postulaciones as $i => $postId) {
+                Postulacion::where('id', $postId)->update(['grupo_id' => $grupoIds[$i % count($grupoIds)]]);
+            }
+
+            // 3. Asignar docentes por materia en round-robin
+            $docentes = DB::table('docente')->pluck('CI')->toArray();
+            $materias  = DB::table('materia')->pluck('id')->toArray();
+
+            if (!empty($docentes) && !empty($materias)) {
+                foreach ($grupoIds as $gi => $grupoId) {
+                    foreach ($materias as $mi => $materiaId) {
+                        $docenteIdx = ($gi + $mi) % count($docentes);
+                        DB::table('asignacion_docente')->insert([
+                            'docente_ci'      => $docentes[$docenteIdx],
+                            'materia_id'      => $materiaId,
+                            'grupo_id'        => $grupoId,
+                            'convocatoria_id' => $convId,
+                        ]);
+                    }
+                }
+            }
+        });
+
+        BitacoraService::log('Grupos generados automáticamente para convocatoria ' . $convId . ': ' . count($gruposACrear) . ' grupos, ' . $totalInscritos . ' postulantes distribuidos.');
+
+        return response()->json([
+            'mensaje'        => count($gruposACrear) . ' grupos generados correctamente.',
+            'grupos_creados' => count($gruposACrear),
+            'postulantes'    => $totalInscritos,
         ], 201);
     }
 }

@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import client from '../api/client';
 import './pages.css';
 
-const EMPTY_DOC = { CI: '', profesion: '', maestria: '', diplomado_educacion_superior: '', estado: 'ACTIVO' };
+const EMPTY_DOC = { CI: '', materia_id: '', profesion: '', maestria: '', diplomado_educacion_superior: '', estado: 'ACTIVO' };
 
 const IcoPlus = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
 const IcoEdit = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
@@ -17,6 +17,7 @@ const IcoView = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 
 export default function Docentes() {
   const [docentes, setDocentes]   = useState([]);
+  const [materias, setMaterias]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [modal, setModal]         = useState(null);   // null | 'crear' | 'editar' | 'carga'
   const [form, setForm]           = useState(EMPTY_DOC);
@@ -28,8 +29,12 @@ export default function Docentes() {
 
   const cargar = async () => {
     setLoading(true);
-    try { const { data } = await client.get('/docentes'); setDocentes(data); }
-    catch {} finally { setLoading(false); }
+    try {
+      const [d, m] = await Promise.all([client.get('/docentes'), client.get('/materias')]);
+      setDocentes(d.data);
+      setMaterias(m.data);
+    } catch (_) {
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { cargar(); }, []);
@@ -38,7 +43,7 @@ export default function Docentes() {
 
   const abrirCrear  = () => { setForm(EMPTY_DOC); setError(''); setModal('crear'); };
   const abrirEditar = (d) => {
-    setForm({ CI: d.CI, profesion: d.profesion, maestria: d.maestria, diplomado_educacion_superior: d.diplomado_educacion_superior, estado: d.usuario?.estado ?? 'ACTIVO' });
+    setForm({ CI: d.CI, materia_id: d.materia_id ?? '', profesion: d.profesion, maestria: d.maestria, diplomado_educacion_superior: d.diplomado_educacion_superior, estado: d.usuario?.estado ?? 'ACTIVO' });
     setError(''); setModal('editar');
   };
   const cerrar = () => { setModal(null); setError(''); setCarga(null); };
@@ -100,14 +105,19 @@ export default function Docentes() {
       <div className="pg-table-wrap">
         {loading ? <div className="pg-loading">Cargando...</div> : (
           <table className="pg-table">
-            <thead><tr><th>CI</th><th>Nombre</th><th>Profesión</th><th>Maestría</th><th>Diplomado Ed. Sup.</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>CI</th><th>Nombre</th><th>Materia</th><th>Profesión</th><th>Maestría</th><th>Diplomado Ed. Sup.</th><th>Acciones</th></tr></thead>
             <tbody>
               {filtrados.length === 0
-                ? <tr><td colSpan={6} className="pg-empty">No hay docentes registrados</td></tr>
+                ? <tr><td colSpan={7} className="pg-empty">No hay docentes registrados</td></tr>
                 : filtrados.map(d => (
                   <tr key={d.CI}>
                     <td><span className="pg-badge pg-badge--activa">{d.CI}</span></td>
                     <td style={{ fontWeight: 600 }}>{d.usuario?.nombre_completo ?? '—'}</td>
+                    <td>
+                      {d.materia
+                        ? <span style={{ background: '#eff6ff', color: '#1e40af', padding: '2px 9px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700 }}>{d.materia.nombre}</span>
+                        : <span style={{ color: '#d1d5db' }}>—</span>}
+                    </td>
                     <td>{d.profesion}</td>
                     <td><span style={{ fontSize: '0.78rem', color: '#6b7280' }}>{d.maestria}</span></td>
                     <td><span style={{ fontSize: '0.78rem', color: '#6b7280' }}>{d.diplomado_educacion_superior}</span></td>
@@ -146,6 +156,13 @@ export default function Docentes() {
                     <label>CI del Docente *</label>
                     <input type="number" value={form.CI} onChange={set('CI')}
                       placeholder="Ej: 10000005" required readOnly={modal === 'editar'} />
+                  </div>
+                  <div className="pg-field">
+                    <label>Materia que imparte</label>
+                    <select value={form.materia_id} onChange={set('materia_id')}>
+                      <option value="">— Sin asignar —</option>
+                      {materias.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                    </select>
                   </div>
                   <div className="pg-field">
                     <label>Profesión *</label>

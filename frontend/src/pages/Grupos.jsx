@@ -58,6 +58,15 @@ export default function Grupos() {
   const [errAsig, setErrAsig]           = useState('');
   const [savingAsig, setSavingAsig]     = useState(false);
 
+  /* ── Generación automática de grupos ──────────────────── */
+  const [modalGen, setModalGen]         = useState(null); // null | 'calculo' | 'distribucion'
+  const [genConv, setGenConv]           = useState(null); // convocatoria seleccionada
+  const [calculo, setCalculo]           = useState(null); // resultado del cálculo
+  const [turnos, setTurnos]             = useState({ mañana: 0, tarde: 0, noche: 0 });
+  const [generando, setGenerando]       = useState(false);
+  const [errGen, setErrGen]             = useState('');
+  const [msgGen, setMsgGen]             = useState('');
+
   /* ── Carga inicial ─────────────────────────────────────── */
   const cargar = async () => {
     setLoading(true);
@@ -192,6 +201,57 @@ export default function Grupos() {
     catch (err) { alert(err.response?.data?.mensaje ?? 'No se pudo quitar.'); }
   };
 
+  /* ── Generación automática ─────────────────────────────── */
+  const abrirGenerador = async () => {
+    setErrGen(''); setMsgGen('');
+    // Buscar convocatorias finalizadas sin grupos aún
+    const todosGrupos = await client.get('/grupos').then(r => r.data).catch(() => []);
+    const convsConGrupos = new Set(todosGrupos.map(g => g.convocatoria_id));
+    const candidatas = convocatorias.filter(
+      c => c.estado === 'finalizada' && !convsConGrupos.has(c.id)
+    );
+    if (candidatas.length === 0) {
+      setMsgGen('No hay convocatorias finalizadas sin grupos pendientes.');
+      setModalGen('calculo');
+      setCalculo(null);
+      setGenConv(null);
+      return;
+    }
+    const conv = candidatas[0]; // más reciente (ya vienen ordenadas desc)
+    setGenConv(conv);
+    try {
+      const { data } = await client.get(`/convocatorias/${conv.id}/calcular-grupos`);
+      setCalculo(data);
+      setTurnos({ mañana: 0, tarde: 0, noche: 0 });
+      setModalGen('calculo');
+    } catch { setErrGen('Error al calcular grupos.'); }
+  };
+
+  const irADistribucion = () => { setModalGen('distribucion'); setErrGen(''); };
+
+  const setTurno = (t) => (e) => {
+    const v = Math.max(0, parseInt(e.target.value) || 0);
+    setTurnos(p => ({ ...p, [t]: v }));
+  };
+
+  const totalTurnos = turnos.mañana + turnos.tarde + turnos.noche;
+
+  const generarGrupos = async () => {
+    setGenerando(true); setErrGen('');
+    try {
+      const { data } = await client.post('/grupos/generar', {
+        convocatoria_id: genConv.id,
+        turnos,
+      });
+      setModalGen(null);
+      setMsgGen(data.mensaje);
+      cargar();
+      setTimeout(() => setMsgGen(''), 5000);
+    } catch (err) {
+      setErrGen(err.response?.data?.mensaje || 'Error al generar grupos.');
+    } finally { setGenerando(false); }
+  };
+
   /* ── Render ────────────────────────────────────────────── */
   return (
     <div className="pg">
@@ -201,8 +261,15 @@ export default function Grupos() {
           <h1 className="pg-title">Gestionar Grupos</h1>
           <p className="pg-subtitle">{grupos.length} grupo(s) registrado(s)</p>
         </div>
-        <button className="pg-btn pg-btn--primary" onClick={abrirCrear}><IcoPlus /> Nuevo Grupo</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="pg-btn pg-btn--ghost" onClick={abrirGenerador} style={{ fontSize: '0.82rem' }}>
+            ⚡ Generar grupos automáticamente
+          </button>
+          <button className="pg-btn pg-btn--primary" onClick={abrirCrear}><IcoPlus /> Nuevo Grupo</button>
+        </div>
       </div>
+
+      {msgGen && <div className="pg-alert pg-alert--success">{msgGen}</div>}
 
       {/* Filtro por convocatoria */}
       <div className="pg-filters">
@@ -273,103 +340,26 @@ export default function Grupos() {
               {tab === 'horarios' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                  {/* Selector de turno */}
-                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '1rem' }}>
-                    <p style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1e40af', marginBottom: '0.75rem' }}>
-                      Aplicar Turno Completo
-                    </p>
-                    {errHor && <div className="pg-alert pg-alert--error" style={{ marginBottom: '0.75rem' }}>{errHor}</div>}
-                    {msgTurno && <div className="pg-alert pg-alert--success" style={{ marginBottom: '0.75rem' }}>{msgTurno}</div>}
-                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {[
-                        { val: 'mañana', label: 'Mañana',  sub: '7:00 – 13:00', color: '#92400e', bg: '#fffbeb' },
-                        { val: 'tarde',  label: 'Tarde',   sub: '13:00 – 19:00', color: '#065f46', bg: '#ecfdf5' },
-                        { val: 'noche',  label: 'Noche',   sub: '17:30 – 22:30', color: '#3730a3', bg: '#eef2ff' },
-                      ].map(t => (
-                        <button key={t.val} type="button"
-                          onClick={() => setTurnoSelec(turnoSelec === t.val ? '' : t.val)}
-                          style={{
-                            padding: '8px 18px', borderRadius: 8, cursor: 'pointer', transition: 'all 0.15s',
-                            border: `2px solid ${turnoSelec === t.val ? t.color : '#d1d5db'}`,
-                            background: turnoSelec === t.val ? t.bg : 'white',
-                            color: turnoSelec === t.val ? t.color : '#374151',
-                            fontWeight: turnoSelec === t.val ? 700 : 500, fontSize: '0.82rem',
-                          }}>
-                          <div>{t.label}</div>
-                          <div style={{ fontSize: '0.68rem', opacity: 0.7 }}>{t.sub}</div>
-                        </button>
-                      ))}
-                      <button type="button" className="pg-btn pg-btn--primary"
-                        onClick={aplicarTurno}
-                        disabled={!turnoSelec || aplicandoTurno}
-                        style={{ height: 54, marginLeft: 'auto' }}>
-                        {aplicandoTurno ? 'Aplicando...' : `Aplicar turno ${turnoSelec || '...'}`}
-                      </button>
-                    </div>
-                    <p style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                      Reemplaza todos los horarios actuales con los {turnoSelec ? { mañana: 21, tarde: 21, noche: 21 }[turnoSelec] : '~21'} bloques del turno seleccionado.
-                    </p>
-                  </div>
-
-                  {/* Agregar horario individual (avanzado) */}
-                  <details style={{ background: '#f9fafb', borderRadius: 6, border: '1px solid #e5e7eb' }}>
-                    <summary style={{ padding: '0.75rem 1rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280' }}>
-                      Agregar horario individual (avanzado)
-                    </summary>
-                    <form onSubmit={agregarHorario} style={{ padding: '1rem', paddingTop: 0 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.75rem' }}>
-                        <div className="pg-field">
-                          <label>Día *</label>
-                          <select value={formHor.dia} onChange={setH('dia')}>
-                            {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                          </select>
-                        </div>
-                        <div className="pg-field">
-                          <label>Aula {grupoActivo.modalidad === 'presencial' ? '*' : '(opcional)'}</label>
-                          <select value={formHor.aula_nro} onChange={setH('aula_nro')}
-                            required={grupoActivo.modalidad === 'presencial'}>
-                            <option value="">-- Sin aula --</option>
-                            {aulas.map(a => <option key={a.nro} value={a.nro}>{a.nro}{a.descripcion ? ` — ${a.descripcion}` : ''}</option>)}
-                          </select>
-                        </div>
-                        <div className="pg-field">
-                          <label>Hora Inicio *</label>
-                          <input type="time" value={formHor.hora_inicio} onChange={setH('hora_inicio')} required />
-                        </div>
-                        <div className="pg-field">
-                          <label>Hora Fin *</label>
-                          <input type="time" value={formHor.hora_fin} onChange={setH('hora_fin')} min={formHor.hora_inicio} required />
-                        </div>
-                      </div>
-                      <button type="submit" className="pg-btn pg-btn--primary" style={{ marginTop: '0.75rem' }} disabled={savingHor}>
-                        {savingHor ? 'Guardando...' : '+ Agregar'}
-                      </button>
-                    </form>
-                  </details>
-
                   {/* Lista de horarios */}
                   {horarios.length === 0
-                    ? <div className="pg-empty" style={{ padding: '1.5rem' }}>Sin horarios — selecciona un turno arriba</div>
+                    ? <div className="pg-empty" style={{ padding: '1.5rem' }}>Sin horarios asignados</div>
                     : (
                       <table className="pg-table">
-                        <thead><tr><th>Turno</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Aula</th><th></th></tr></thead>
+                        <thead><tr><th>Turno</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Aula</th></tr></thead>
                         <tbody>
                           {horarios.map(h => (
                             <tr key={h.id}>
                               <td>
                                 {h.turno && (
                                   <span className={`pg-badge pg-badge--${h.turno === 'mañana' ? 'pendiente' : h.turno === 'tarde' ? 'aprobado' : 'virtual'}`}>
-                                    {h.turno}
+                                    {h.turno.toUpperCase()}
                                   </span>
                                 )}
                               </td>
                               <td><span className="pg-badge pg-badge--activa">{h.dia}</span></td>
                               <td style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{h.hora_inicio}</td>
                               <td style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{h.hora_fin}</td>
-                              <td style={{ fontSize: '0.78rem' }}>{h.aula ? `${h.aula.nro}` : <span style={{ color: '#9ca3af' }}>Virtual</span>}</td>
-                              <td>
-                                <button className="pg-act-btn pg-act-btn--delete" onClick={() => quitarHorario(h.id)} title="Quitar"><IcoDel /></button>
-                              </td>
+                              <td style={{ fontSize: '0.78rem' }}>{h.aula ? h.aula.nro : <span style={{ color: '#9ca3af' }}>Virtual</span>}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -378,54 +368,19 @@ export default function Grupos() {
                 </div>
               )}
 
-              {/* ── TAB ASIGNACIONES (CU13) ──────────────────── */}
+              {/* ── TAB DOCENTES (CU13) ──────────────────────── */}
               {tab === 'asignaciones' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {/* Formulario asignar docente */}
-                  <form onSubmit={asignarDocente} style={{ background: '#f9fafb', padding: '1rem', borderRadius: 6 }}>
-                    <p style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', color: '#374151' }}>
-                      Asignar Docente — máx. 4 grupos por docente
-                    </p>
-                    {errAsig && <div className="pg-alert pg-alert--error" style={{ marginBottom: '0.75rem' }}>{errAsig}</div>}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      <div className="pg-field">
-                        <label>Docente *</label>
-                        <select value={formAsig.docente_ci} onChange={setA('docente_ci')} required>
-                          <option value="">Seleccionar docente...</option>
-                          {docentes.map(d => (
-                            <option key={d.CI} value={d.CI}>
-                              {d.usuario?.nombre_completo ?? `CI ${d.CI}`}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="pg-field">
-                        <label>Materia *</label>
-                        <select value={formAsig.materia_id} onChange={setA('materia_id')} required>
-                          <option value="">Seleccionar materia...</option>
-                          {materias.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <button type="submit" className="pg-btn pg-btn--primary" style={{ marginTop: '0.75rem' }} disabled={savingAsig}>
-                      {savingAsig ? 'Asignando...' : '+ Asignar Docente'}
-                    </button>
-                  </form>
-
-                  {/* Lista de asignaciones */}
+                <div>
                   {asignaciones.length === 0
                     ? <div className="pg-empty" style={{ padding: '1.5rem' }}>Sin docentes asignados</div>
                     : (
                       <table className="pg-table">
-                        <thead><tr><th>Docente</th><th>Materia</th><th></th></tr></thead>
+                        <thead><tr><th>Docente</th><th>Materia</th></tr></thead>
                         <tbody>
                           {asignaciones.map(a => (
                             <tr key={a.id}>
                               <td style={{ fontWeight: 600 }}>{a.docente?.usuario?.nombre_completo ?? `CI ${a.docente_ci}`}</td>
                               <td>{a.materia?.nombre}</td>
-                              <td>
-                                <button className="pg-act-btn pg-act-btn--delete" onClick={() => quitarAsignacion(a.id)} title="Quitar"><IcoDel /></button>
-                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -487,6 +442,126 @@ export default function Grupos() {
                 <button type="submit" className="pg-btn pg-btn--primary" disabled={savingGrp}>{savingGrp ? 'Guardando...' : 'Guardar'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── Modal generación automática ──────────────────────── */}
+      {modalGen && (
+        <div className="pg-overlay">
+          <div className="pg-modal" style={{ maxWidth: 560, width: '100%' }}>
+            <div className="pg-modal__header">
+              <h3 className="pg-modal__title">
+                {modalGen === 'calculo' ? '⚡ Generar grupos automáticamente' : '📅 Distribución por turno'}
+              </h3>
+              <button className="pg-modal__close" onClick={() => setModalGen(null)}>×</button>
+            </div>
+            <div className="pg-modal__body">
+              {errGen && <div className="pg-alert pg-alert--error" style={{ marginBottom: '1rem' }}>{errGen}</div>}
+
+              {/* PASO 1 — Cálculo */}
+              {modalGen === 'calculo' && (
+                <>
+                  {!calculo ? (
+                    <p style={{ color: '#6b7280', textAlign: 'center', padding: '1rem' }}>
+                      {msgGen || 'No hay convocatorias finalizadas sin grupos pendientes.'}
+                    </p>
+                  ) : (
+                    <>
+                      <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: '1.25rem', marginBottom: '1.25rem' }}>
+                        <p style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', marginBottom: 8 }}>Convocatoria</p>
+                        <p style={{ fontWeight: 700, fontSize: '1rem', color: '#1f2937' }}>{calculo.convocatoria.nombre}</p>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>ID: {calculo.convocatoria.id}</p>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                        {[
+                          { label: 'Postulantes inscritos', value: calculo.total_inscritos, color: '#1e40af', bg: '#eff6ff' },
+                          { label: 'Límite por grupo', value: calculo.limite_por_grupo, color: '#065f46', bg: '#ecfdf5' },
+                          { label: 'Grupos necesarios', value: calculo.grupos_necesarios, color: '#7c3aed', bg: '#f5f3ff' },
+                        ].map(({ label, value, color, bg }) => (
+                          <div key={label} style={{ background: bg, borderRadius: 8, padding: '0.85rem', textAlign: 'center' }}>
+                            <p style={{ fontSize: '1.6rem', fontWeight: 800, color, margin: 0 }}>{value}</p>
+                            <p style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: 4 }}>{label}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 6, padding: '0.6rem 1rem', fontSize: '0.8rem', color: '#92400e', marginBottom: '1rem' }}>
+                        <strong>Fórmula:</strong> {calculo.formula}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* PASO 2 — Distribución de turnos */}
+              {modalGen === 'distribucion' && calculo && (
+                <>
+                  <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.25rem' }}>
+                    Distribuye los <strong>{calculo.grupos_necesarios}</strong> grupos entre los turnos disponibles.
+                    La suma debe ser igual a <strong>{calculo.grupos_necesarios}</strong>.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+                    {[
+                      { key: 'mañana', label: '🌅 Mañana', sub: '7:00 am – 1:00 pm', color: '#d97706', bg: '#fffbeb' },
+                      { key: 'tarde',  label: '☀️ Tarde',  sub: '1:00 pm – 7:00 pm', color: '#0284c7', bg: '#f0f9ff' },
+                      { key: 'noche',  label: '🌙 Noche',  sub: '5:30 pm – 10:30 pm', color: '#7c3aed', bg: '#f5f3ff' },
+                    ].map(({ key, label, sub, color, bg }) => (
+                      <div key={key} style={{ background: bg, borderRadius: 8, padding: '0.9rem', border: `1.5px solid ${turnos[key] > 0 ? color : '#e5e7eb'}` }}>
+                        <p style={{ fontWeight: 700, fontSize: '0.82rem', color, marginBottom: 2 }}>{label}</p>
+                        <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: 8 }}>{sub}</p>
+                        <input type="number" min={0} max={calculo.grupos_necesarios} value={turnos[key]}
+                          onChange={setTurno(key)}
+                          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', fontSize: '1.2rem', fontWeight: 700, padding: '6px', border: '1.5px solid #d1d5db', borderRadius: 5 }}
+                        />
+                        <p style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: 4, textAlign: 'center' }}>
+                          {turnos[key] > 0 ? `→ ${Array.from({length: turnos[key]}, (_, i) => `${key[0].toUpperCase()}${String(i+1).padStart(3,'0')}`).join(', ')}` : 'Sin grupos'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Indicador de suma */}
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '0.6rem 1rem', borderRadius: 6,
+                    background: totalTurnos === calculo.grupos_necesarios ? '#ecfdf5' : '#fef2f2',
+                    border: `1px solid ${totalTurnos === calculo.grupos_necesarios ? '#86efac' : '#fca5a5'}`,
+                    marginBottom: '1rem', fontSize: '0.85rem',
+                  }}>
+                    <span style={{ color: totalTurnos === calculo.grupos_necesarios ? '#065f46' : '#b91c1c', fontWeight: 600 }}>
+                      {totalTurnos === calculo.grupos_necesarios
+                        ? `✓ Distribución correcta: ${totalTurnos} grupos`
+                        : `${totalTurnos} de ${calculo.grupos_necesarios} grupos asignados`}
+                    </span>
+                    {totalTurnos !== calculo.grupos_necesarios && (
+                      <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
+                        Faltan {calculo.grupos_necesarios - totalTurnos} grupo(s)
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="pg-modal__footer">
+              <button className="pg-btn pg-btn--ghost" onClick={() => setModalGen(null)}>Cancelar</button>
+              {modalGen === 'calculo' && calculo && calculo.grupos_necesarios > 0 && (
+                <button className="pg-btn pg-btn--primary" onClick={irADistribucion}>
+                  Siguiente: Distribuir turnos →
+                </button>
+              )}
+              {modalGen === 'distribucion' && (
+                <>
+                  <button className="pg-btn pg-btn--ghost" onClick={() => setModalGen('calculo')}>← Atrás</button>
+                  <button
+                    className="pg-btn pg-btn--primary"
+                    onClick={generarGrupos}
+                    disabled={generando || totalTurnos !== calculo.grupos_necesarios}
+                  >
+                    {generando ? 'Generando...' : '⚡ Generar grupos'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

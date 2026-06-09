@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CompletarRegistroRequest;
 use App\Mail\ContrasenaTemporalMail;
 use App\Models\Carrera;
+use App\Models\Pago;
 use App\Models\Postulante;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -43,30 +44,54 @@ class RegistroController extends Controller
 
     public function registrarCI(Request $request): JsonResponse
     {
-        $request->validate([
-            'CI' => ['required', 'integer', 'unique:usuario,CI'],
-        ], [
-            'CI.unique'   => 'Este CI ya está registrado en el sistema.',
-            'CI.required' => 'El CI es obligatorio.',
-        ]);
+        $request->validate(
+            ['CI' => ['required', 'integer']],
+            ['CI.required' => 'El CI es obligatorio.']
+        );
 
-        $rolPostulante = \App\Models\Rol::where('nombre', 'Postulante')->firstOrFail();
+        $ci = (int) $request->CI;
 
-        $usuario = User::create([
-            'CI'     => $request->CI,
-            'rol_id' => $rolPostulante->id,
-            'estado' => 'INACTIVO',
-        ]);
+        // Verificar que existe un pago válido (no rechazado) para este CI
+        $tienePago = Pago::where('postulante_ci', $ci)
+            ->where('estado_pago', '!=', 'rechazado')
+            ->exists();
 
-        // Crea el registro vacío en postulante (herencia por CI)
-        Postulante::create(['CI' => $request->CI]);
+        if (! $tienePago) {
+            return response()->json([
+                'mensaje' => 'El CI no tiene un pago registrado. Diríjase a caja primero.',
+            ], 402);
+        }
 
-        BitacoraService::log("CI {$request->CI} habilitado para registro de postulante");
+        $usuario = User::find($ci);
 
+        // Caso: nuevo postulante (nunca estuvo en el sistema)
+        if (! $usuario) {
+            $rolPostulante = \App\Models\Rol::where('nombre', 'Postulante')->firstOrFail();
+            $usuario = User::create(['CI' => $ci, 'rol_id' => $rolPostulante->id, 'estado' => 'INACTIVO']);
+            Postulante::create(['CI' => $ci]);
+            BitacoraService::log("CI {$ci} habilitado para registro de postulante (pago verificado)");
+            return response()->json([
+                'mensaje' => 'CI habilitado correctamente. El postulante puede completar su registro en la plataforma web.',
+                'CI'      => $ci,
+            ], 201);
+        }
+
+        // Caso: aplazado (ya tenía cuenta pero fue desactivada/bloqueada)
+        if ($usuario->estado !== 'ACTIVO') {
+            $usuario->update(['estado' => 'INACTIVO']);
+            BitacoraService::log("CI {$ci} reactivado para repostulación (pago verificado)");
+            return response()->json([
+                'mensaje' => 'Cuenta reactivada. El postulante puede completar su re-registro en la plataforma web.',
+                'CI'      => $ci,
+            ]);
+        }
+
+        // Caso: ya tiene cuenta activa
         return response()->json([
-            'mensaje' => 'CI registrado correctamente. El postulante puede completar su registro en la plataforma web.',
-            'CI'      => $usuario->CI,
-        ], 201);
+            'mensaje' => 'Este CI ya tiene una cuenta activa en el sistema.',
+            'CI'      => $ci,
+            'codigo'  => 'YA_REGISTRADO',
+        ]);
     }
 
     /* ── PASO 2a (estudiante): verificar CI antes del formulario ─────── */
