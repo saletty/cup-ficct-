@@ -62,16 +62,14 @@ class PasswordController extends Controller
             return response()->json($respuesta);
         }
 
-        $token = Str::random(64);
-        // Token expira en 15 minutos
-        Cache::put("pwd_reset_{$usuario->CI}", Hash::make($token), now()->addMinutes(15));
-
         try {
+            $token = Str::random(64);
+            Cache::put("pwd_reset_{$usuario->CI}", Hash::make($token), now()->addMinutes(15));
             Mail::to($usuario->email)->send(
                 new RestablecerPasswordMail($usuario->nombre_completo, $token, $usuario->CI)
             );
         } catch (\Throwable $e) {
-            \Log::error('[password/solicitar] Mail falló: ' . $e->getMessage());
+            \Log::error('[password/solicitar] falló: ' . $e->getMessage());
         }
 
         return response()->json($respuesta);
