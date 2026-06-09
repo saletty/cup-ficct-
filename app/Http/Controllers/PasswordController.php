@@ -70,8 +70,8 @@ class PasswordController extends Controller
             Mail::to($usuario->email)->send(
                 new RestablecerPasswordMail($usuario->nombre_completo, $token, $usuario->CI)
             );
-        } catch (\Exception) {
-            // El correo falló; el token sigue guardado en caché para reintento manual
+        } catch (\Exception $e) {
+            \Log::error('[password/solicitar] Mail falló: ' . $e->getMessage());
         }
 
         return response()->json($respuesta);
