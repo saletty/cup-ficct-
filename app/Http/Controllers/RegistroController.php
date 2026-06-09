@@ -219,7 +219,7 @@ class RegistroController extends Controller
                 new ContrasenaTemporalMail($request->nombre_completo, $contrasenaTemp)
             );
             $mensajeCorreo = "Se envió una contraseña temporal a {$request->email}.";
-        } catch (\Exception) {
+        } catch (\Throwable) {
             // El correo falló pero el registro ya fue confirmado
         }
 
