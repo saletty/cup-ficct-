@@ -14,7 +14,9 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+   // 'default' => env('MAIL_MAILER', 'log'),
+    // Cambia esto temporalmente para obligar a usar brevo sin importar Railway
+     'default' => 'brevo',
 
     /*
     |--------------------------------------------------------------------------
@@ -56,11 +58,10 @@ return [
                 ],
             ],
         ],
-
-        'brevo' => [
-    'transport' => 'brevo',
-    'key' => env('BREVO_API_KEY'),
-],
+            'brevo' => [
+                'transport' => 'brevo',
+                'key' => env('BREVO_API_KEY'),
+            ],
 
         'ses' => [
             'transport' => 'ses',
