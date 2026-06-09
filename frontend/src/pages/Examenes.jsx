@@ -227,9 +227,9 @@ export default function Examenes() {
                     <label>Número de Examen *</label>
                     <select value={form.numero_examen} onChange={e => set('numero_examen', e.target.value)} required>
                       <option value="">— Seleccionar —</option>
-                      <option value="1">1er Examen — Computación</option>
-                      <option value="2">2do Examen — Matemáticas / Inglés</option>
-                      <option value="3">3er Examen — Física</option>
+                      <option value="1">1er Examen</option>
+                      <option value="2">2do Examen</option>
+                      <option value="3">3er Examen</option>
                     </select>
                   </div>
                   <div className="pg-field">
