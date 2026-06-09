@@ -161,22 +161,21 @@ class RegistroController extends Controller
 
     public function completar(CompletarRegistroRequest $request): JsonResponse
     {
+        $usuario = User::find($request->CI);
+
+        if (! $usuario || $usuario->estado !== 'INACTIVO') {
+            return response()->json([
+                'mensaje' => 'Operación no permitida. Verifique su CI o contacte a la administración.',
+            ], 409);
+        }
+
+        // Contraseña temporal segura: 4 letras + guion + 4 dígitos + guion + 4 letras
+        $contrasenaTemp = strtoupper(Str::random(4))
+            . '-' . rand(1000, 9999)
+            . '-' . strtoupper(Str::random(4));
+
         DB::beginTransaction();
         try {
-            $usuario = User::find($request->CI);
-
-            if (! $usuario || $usuario->estado !== 'INACTIVO') {
-                return response()->json([
-                    'mensaje' => 'Operación no permitida. Verifique su CI o contacte a la administración.',
-                ], 409);
-            }
-
-            // Contraseña temporal segura: 4 letras + guion + 4 dígitos + guion + 4 letras
-            $contrasenaTemp = strtoupper(Str::random(4))
-                . '-' . rand(1000, 9999)
-                . '-' . strtoupper(Str::random(4));
-
-            // Actualizar usuario
             $usuario->update([
                 'nombre_completo'         => $request->nombre_completo,
                 'email'                   => $request->email,
@@ -186,7 +185,6 @@ class RegistroController extends Controller
                 'intentos_fallidos'       => 0,
             ]);
 
-            // Actualizar datos del postulante
             Postulante::updateOrCreate(
                 ['CI' => $request->CI],
                 [
@@ -203,25 +201,30 @@ class RegistroController extends Controller
                 ]
             );
 
-            // Enviar correo con contraseña temporal
-            Mail::to($request->email)->send(
-                new ContrasenaTemporalMail($request->nombre_completo, $contrasenaTemp)
-            );
-
             DB::commit();
-
-            BitacoraService::log("Postulante CI={$request->CI} completó su registro en la plataforma");
-
-            return response()->json([
-                'mensaje' => 'Registro completado. Se envió una contraseña temporal a ' . $request->email . '. Úsela para su primer ingreso y cámbiela de inmediato.',
-            ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'mensaje' => 'Error al completar el registro. Intente nuevamente.',
+                'mensaje' => 'Error al guardar los datos. Intente nuevamente.',
                 'detalle' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+
+        BitacoraService::log("Postulante CI={$request->CI} completó su registro en la plataforma");
+
+        // Envío de correo best-effort: si falla no aborta el registro
+        $mensajeCorreo = 'Contacte a la administración para obtener su contraseña temporal.';
+        try {
+            Mail::to($request->email)->send(
+                new ContrasenaTemporalMail($request->nombre_completo, $contrasenaTemp)
+            );
+            $mensajeCorreo = "Se envió una contraseña temporal a {$request->email}.";
+        } catch (\Exception) {
+            // El correo falló pero el registro ya fue confirmado
+        }
+
+        return response()->json([
+            'mensaje' => "Registro completado. {$mensajeCorreo} Úsela para su primer ingreso y cámbiela de inmediato.",
+        ], 201);
     }
 }
