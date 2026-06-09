@@ -38,9 +38,10 @@ class ReporteController extends Controller
                 'convocatoria'     => $p->convocatoria?->nombre ?? $p->convocatoria_id,
                 'carrera_opcion1'  => $p->carreraOpcion1?->nombre ?? '—',
                 'estado_admision'  => $p->estado_admision,
-                'nota1_computacion'   => $eval?->nota_examen1,
-                'nota2_matematicas'   => $eval?->nota_examen2,
-                'nota3_ingles_fisica' => $eval?->nota_examen3,
+                'nota1_computacion' => $eval?->nota_examen1,
+                'nota2_matematicas' => $eval?->nota_examen2,
+                'nota3_ingles'      => $eval?->nota_examen3,
+                'nota4_fisica'      => $eval?->nota_examen4,
                 'promedio_final'      => $eval?->promedio_final,
                 'estado_resultado'    => $eval?->estado_resultado ?? 'sin evaluar',
             ];
@@ -80,6 +81,7 @@ class ReporteController extends Controller
             ROUND(AVG(nota_examen1)::numeric,  2) as promedio_nota1,
             ROUND(AVG(nota_examen2)::numeric,  2) as promedio_nota2,
             ROUND(AVG(nota_examen3)::numeric,  2) as promedio_nota3,
+            ROUND(AVG(nota_examen4)::numeric,  2) as promedio_nota4,
             ROUND(AVG(promedio_final)::numeric, 2) as promedio_general,
             ROUND(MIN(promedio_final)::numeric, 2) as min_promedio,
             ROUND(MAX(promedio_final)::numeric, 2) as max_promedio
@@ -98,12 +100,14 @@ class ReporteController extends Controller
             'promedio_nota1'    => (float) $s->promedio_nota1,
             'promedio_nota2'    => (float) $s->promedio_nota2,
             'promedio_nota3'    => (float) $s->promedio_nota3,
+            'promedio_nota4'    => (float) $s->promedio_nota4,
             'min_promedio'      => (float) $s->min_promedio,
             'max_promedio'      => (float) $s->max_promedio,
             'areas'             => [
-                ['nombre' => 'Computación',    'promedio' => (float) $s->promedio_nota1],
-                ['nombre' => 'Matemáticas',    'promedio' => (float) $s->promedio_nota2],
-                ['nombre' => 'Inglés / Física', 'promedio' => (float) $s->promedio_nota3],
+                ['nombre' => 'Computación', 'promedio' => (float) $s->promedio_nota1],
+                ['nombre' => 'Matemáticas', 'promedio' => (float) $s->promedio_nota2],
+                ['nombre' => 'Inglés',      'promedio' => (float) $s->promedio_nota3],
+                ['nombre' => 'Física',      'promedio' => (float) $s->promedio_nota4],
             ],
         ]);
     }

@@ -136,7 +136,8 @@ export default function Reportes() {
         <td>${r.carrera_opcion1}</td>
         <td style="text-align:center">${r.nota1_computacion ?? '—'}</td>
         <td style="text-align:center">${r.nota2_matematicas ?? '—'}</td>
-        <td style="text-align:center">${r.nota3_ingles_fisica ?? '—'}</td>
+        <td style="text-align:center">${r.nota3_ingles ?? '—'}</td>
+        <td style="text-align:center">${r.nota4_fisica ?? '—'}</td>
         <td style="text-align:center;font-weight:700">${r.promedio_final ?? '—'}</td>
         <td class="${r.estado_resultado}">${r.estado_resultado}</td>
       </tr>`).join('');
@@ -144,7 +145,7 @@ export default function Reportes() {
       <table>
         <thead><tr>
           <th>CI</th><th>Nombre</th><th>Convocatoria</th><th>Carrera</th>
-          <th>Computación</th><th>Matemáticas</th><th>Inglés/Física</th>
+          <th>Computación</th><th>Matemáticas</th><th>Inglés</th><th>Física</th>
           <th>Promedio</th><th>Resultado</th>
         </tr></thead>
         <tbody>${rows}</tbody>
@@ -165,7 +166,8 @@ export default function Reportes() {
       Promedio_General:   stats.promedio_general,
       Promedio_Computacion: stats.promedio_nota1,
       Promedio_Matematicas: stats.promedio_nota2,
-      Promedio_Ingles_Fisica: stats.promedio_nota3,
+      Promedio_Ingles:      stats.promedio_nota3,
+      Promedio_Fisica:      stats.promedio_nota4,
       Min_Promedio:       stats.min_promedio,
       Max_Promedio:       stats.max_promedio,
     }], 'reporte_estadisticas_CUP');
@@ -296,20 +298,20 @@ export default function Reportes() {
                 <thead>
                   <tr>
                     <th>CI</th><th>Nombre</th><th>Convocatoria</th><th>Carrera</th>
-                    <th>Computación</th><th>Matemáticas</th><th>Inglés/Física</th>
+                    <th>Computación</th><th>Matemáticas</th><th>Inglés</th><th>Física</th>
                     <th>Promedio</th><th>Resultado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {postulantes.length === 0
-                    ? <tr><td colSpan={9} className="pg-empty">No hay registros</td></tr>
+                    ? <tr><td colSpan={10} className="pg-empty">No hay registros</td></tr>
                     : postulantes.map(r => (
                       <tr key={r.ci}>
                         <td style={{ color: '#6b7280', fontSize: '0.78rem' }}>{r.ci}</td>
                         <td style={{ fontWeight: 600 }}>{r.nombre}</td>
                         <td style={{ fontSize: '0.78rem' }}>{r.convocatoria}</td>
                         <td style={{ fontSize: '0.78rem' }}>{r.carrera_opcion1}</td>
-                        {[r.nota1_computacion, r.nota2_matematicas, r.nota3_ingles_fisica].map((n, i) => (
+                        {[r.nota1_computacion, r.nota2_matematicas, r.nota3_ingles, r.nota4_fisica].map((n, i) => (
                           <td key={i} style={{
                             textAlign: 'center', fontWeight: 600,
                             color: n == null ? '#9ca3af' : n < 60 ? '#b91c1c' : '#15803d',
@@ -392,7 +394,8 @@ export default function Reportes() {
                         { label: 'Máximo registrado',   value: stats.max_promedio,      color: '#15803d' },
                         { label: 'Promedio Computación',value: stats.promedio_nota1,    color: '#374151' },
                         { label: 'Promedio Matemáticas',value: stats.promedio_nota2,    color: '#374151' },
-                        { label: 'Promedio Inglés/Fís.',value: stats.promedio_nota3,    color: '#374151' },
+                        { label: 'Promedio Inglés',     value: stats.promedio_nota3,    color: '#374151' },
+                        { label: 'Promedio Física',     value: stats.promedio_nota4,    color: '#374151' },
                       ].map(item => (
                         <tr key={item.label} style={{ borderBottom: '1px solid #f3f4f6' }}>
                           <td style={{ padding: '8px 0', color: '#6b7280' }}>{item.label}</td>

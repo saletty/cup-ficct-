@@ -1,7 +1,7 @@
 // ============================================================
 // CU18 — Gestionar Resultados de Admisión
 // Registro y cálculo de notas con regla de nota mínima (≥60).
-// nota_examen1 = Computación · nota_examen2 = Matemáticas/Inglés · nota_examen3 = Física
+// nota_examen1 = Computación · nota_examen2 = Matemáticas · nota_examen3 = Inglés · nota_examen4 = Física
 // ============================================================
 import { useState, useEffect } from 'react';
 import client from '../api/client';

@@ -129,7 +129,8 @@ export default function DashboardPostulante({ usuario }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div><strong>Computación:</strong> {resultado.evaluacion.nota_examen1 ?? '—'}</div>
                 <div><strong>Matemáticas:</strong> {resultado.evaluacion.nota_examen2 ?? '—'}</div>
-                <div><strong>Inglés/Física:</strong> {resultado.evaluacion.nota_examen3 ?? '—'}</div>
+                <div><strong>Inglés:</strong> {resultado.evaluacion.nota_examen3 ?? '—'}</div>
+                <div><strong>Física:</strong> {resultado.evaluacion.nota_examen4 ?? '—'}</div>
                 <div><strong>Promedio:</strong> {resultado.evaluacion.promedio_final ?? '—'}</div>
                 <div style={{ marginTop: 4 }}><EstadoBadge estado={resultado.evaluacion.estado_resultado} /></div>
               </div>
