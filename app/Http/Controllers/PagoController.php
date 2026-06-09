@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 // CU16 — Gestionar Pagos de Admisión
 // Ciclo transaccional y validación financiera de la tabla pago.
 // El cajero registra el pago (700 Bs) vinculado al tipopago_id.
-// estado_pago: pendiente → verificado → aprobado | rechazado
+// estado_pago: pendiente → verificado | rechazado
 // ============================================================
 class PagoController extends Controller
 {
@@ -88,10 +88,10 @@ class PagoController extends Controller
         $pago = Pago::findOrFail($id);
 
         $data = $request->validate([
-            'estado_pago' => ['required', 'in:pendiente,verificado,aprobado,rechazado'],
+            'estado_pago' => ['required', 'in:pendiente,verificado,rechazado'],
             'observacion' => ['nullable', 'string', 'max:500'],
         ], [
-            'estado_pago.in' => 'Estado no válido. Use: pendiente, verificado, aprobado o rechazado.',
+            'estado_pago.in' => 'Estado no válido. Use: pendiente, verificado o rechazado.',
         ]);
 
         $pago->update($data);
@@ -110,8 +110,8 @@ class PagoController extends Controller
     {
         $pago = Pago::findOrFail($id);
 
-        if ($pago->estado_pago === 'aprobado') {
-            return response()->json(['mensaje' => 'No se puede eliminar un pago aprobado.'], 409);
+        if ($pago->estado_pago === 'verificado') {
+            return response()->json(['mensaje' => 'No se puede eliminar un pago verificado.'], 409);
         }
 
         BitacoraService::log("Pago #{$id} eliminado (postulante CI={$pago->postulante_ci})");

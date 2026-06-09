@@ -1,18 +1,17 @@
 // ============================================================
 // CU16 — Gestionar Pagos de Admisión
 // El cajero registra pagos (700 Bs) y gestiona su estado.
-// estados: pendiente → verificado → aprobado | rechazado
+// estados: pendiente → verificado | rechazado
 // ============================================================
 import { useState, useEffect } from 'react';
 import client from '../api/client';
 import './pages.css';
 
-const ESTADOS = ['pendiente', 'verificado', 'aprobado', 'rechazado'];
+const ESTADOS = ['pendiente', 'verificado', 'rechazado'];
 
 const BADGE_ESTADO = {
   pendiente:  'pg-badge--pendiente',
-  verificado: 'pg-badge--activa',
-  aprobado:   'pg-badge--aprobado',
+  verificado: 'pg-badge--aprobado',
   rechazado:  'pg-badge--bloqueado',
 };
 
@@ -227,7 +226,7 @@ export default function Pagos() {
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                           </svg>
                         </button>
-                        {p.estado_pago !== 'aprobado' && (
+                        {p.estado_pago !== 'verificado' && (
                           <button
                             className="pg-act-btn pg-act-btn--delete"
                             onClick={() => eliminar(p)}
