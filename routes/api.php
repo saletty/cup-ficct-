@@ -215,6 +215,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::put('/examenes/{id}',                                [ExamenAdmisionController::class, 'update']);
         Route::delete('/examenes/{id}',                             [ExamenAdmisionController::class, 'destroy']);
         Route::post('/examenes/{id}/publicar',                      [ExamenAdmisionController::class, 'publicar']);
+        Route::get('/examenes/{id}/cronograma',                     [ExamenAdmisionController::class, 'cronograma']);
+        Route::post('/examenes/{id}/cronograma',                    [ExamenAdmisionController::class, 'guardarCronograma']);
         Route::get('/examenes/{id}/asignaciones',                   [ExamenAdmisionController::class, 'asignaciones']);
         Route::post('/examenes/{id}/asignaciones',                  [ExamenAdmisionController::class, 'asignar']);
         Route::post('/examenes/{id}/asignaciones/auto',             [ExamenAdmisionController::class, 'autoAsignar']);

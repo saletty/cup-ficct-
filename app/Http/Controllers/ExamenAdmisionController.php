@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AsignacionExamen;
 use App\Models\Aula;
+use App\Models\CronogramaExamen;
 use App\Models\ExamenAdmision;
+use App\Models\Grupo;
 use App\Models\Postulante;
 use App\Services\BitacoraService;
 use Illuminate\Http\JsonResponse;
@@ -22,24 +24,26 @@ class ExamenAdmisionController extends Controller
 
     public function index(): JsonResponse
     {
-        $examenes = ExamenAdmision::withCount('asignaciones')->orderByDesc('fecha')->get();
+        $examenes = ExamenAdmision::with('convocatoria:id,nombre')
+            ->withCount('asignaciones')
+            ->withCount('cronograma')
+            ->orderByDesc('fecha')
+            ->get();
         return response()->json($examenes);
     }
 
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'descripcion' => ['required', 'string', 'max:200'],
-            'fecha'       => ['required', 'date'],
-            'hora_inicio' => ['required', 'date_format:H:i'],
-            'hora_fin'    => ['required', 'date_format:H:i', 'after:hora_inicio'],
-        ], [
-            'hora_fin.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
+            'convocatoria_id' => ['required', 'string', 'exists:convocatoria,id'],
+            'numero_examen'   => ['required', 'integer', 'between:1,3'],
+            'descripcion'     => ['required', 'string', 'max:200'],
+            'fecha'           => ['required', 'date'],
         ]);
 
         $data['estado'] = 'borrador';
         $examen = ExamenAdmision::create($data);
-        BitacoraService::log("Examen creado: {$examen->descripcion} ({$examen->fecha})");
+        BitacoraService::log("Examen #{$examen->id} creado: {$examen->descripcion} ({$examen->fecha})");
 
         return response()->json(['mensaje' => 'Examen creado.', 'examen' => $examen], 201);
     }
@@ -59,18 +63,10 @@ class ExamenAdmisionController extends Controller
         }
 
         $data = $request->validate([
-            'descripcion' => ['sometimes', 'string', 'max:200'],
-            'fecha'       => ['sometimes', 'date'],
-            'hora_inicio' => ['sometimes', 'date_format:H:i'],
-            'hora_fin'    => ['sometimes', 'date_format:H:i'],
+            'descripcion'   => ['sometimes', 'string', 'max:200'],
+            'fecha'         => ['sometimes', 'date'],
+            'numero_examen' => ['sometimes', 'integer', 'between:1,3'],
         ]);
-
-        // Verificar consistencia de horas con los valores resultantes
-        $horaInicio = $data['hora_inicio'] ?? $examen->hora_inicio;
-        $horaFin    = $data['hora_fin']    ?? $examen->hora_fin;
-        if ($horaFin <= $horaInicio) {
-            return response()->json(['mensaje' => 'La hora de fin debe ser posterior a la hora de inicio.'], 422);
-        }
 
         $examen->update($data);
         BitacoraService::log("Examen actualizado: #{$id}");
@@ -101,8 +97,8 @@ class ExamenAdmisionController extends Controller
             return response()->json(['mensaje' => 'El examen ya fue publicado o finalizado.'], 409);
         }
 
-        if ($examen->asignaciones()->count() === 0) {
-            return response()->json(['mensaje' => 'El examen no tiene postulantes asignados.'], 422);
+        if ($examen->cronograma()->count() === 0) {
+            return response()->json(['mensaje' => 'El examen no tiene cronograma configurado.'], 422);
         }
 
         $examen->update(['estado' => 'programado']);
@@ -233,6 +229,73 @@ class ExamenAdmisionController extends Controller
         $asignacion->delete();
         BitacoraService::log("Asignación #{$asignId} eliminada del examen #{$id}");
         return response()->json(['mensaje' => 'Asignación eliminada.']);
+    }
+
+    /* ─── Cronograma por grupo ───────────────────────────────────── */
+
+    // GET /v1/examenes/{id}/cronograma — grupos con su horario y aula
+    public function cronograma(int $id): JsonResponse
+    {
+        $examen = ExamenAdmision::with('convocatoria:id,nombre')->findOrFail($id);
+
+        // Grupos de la convocatoria
+        $grupos = Grupo::where('convocatoria_id', $examen->convocatoria_id)
+            ->orderBy('id')
+            ->get(['id', 'convocatoria_id', 'turno', 'cupo_maximo', 'estado']);
+
+        // Entradas de cronograma ya guardadas
+        $slots = CronogramaExamen::with('aula:nro,descripcion,capacidad')
+            ->where('examen_id', $id)
+            ->get()
+            ->keyBy('grupo_id');
+
+        $resultado = $grupos->map(fn ($g) => [
+            'grupo_id'        => $g->id,
+            'convocatoria_id' => $g->convocatoria_id,
+            'turno'           => $g->turno,
+            'cupo'            => $g->cupo_maximo,
+            'hora_inicio'     => $slots[$g->id]->hora_inicio ?? null,
+            'hora_fin'        => $slots[$g->id]->hora_fin    ?? null,
+            'aula_nro'        => $slots[$g->id]->aula_nro    ?? null,
+            'aula'            => $slots[$g->id]->aula        ?? null,
+        ]);
+
+        return response()->json([
+            'examen'     => $examen,
+            'cronograma' => $resultado,
+        ]);
+    }
+
+    // POST /v1/examenes/{id}/cronograma — guardar/actualizar slots por grupo
+    public function guardarCronograma(Request $request, int $id): JsonResponse
+    {
+        $examen = ExamenAdmision::findOrFail($id);
+
+        if ($examen->estado === 'finalizado') {
+            return response()->json(['mensaje' => 'No se puede modificar un examen finalizado.'], 409);
+        }
+
+        $request->validate([
+            'slots'                  => ['required', 'array', 'min:1'],
+            'slots.*.grupo_id'       => ['required', 'string'],
+            'slots.*.convocatoria_id'=> ['required', 'string'],
+            'slots.*.hora_inicio'    => ['required', 'date_format:H:i'],
+            'slots.*.hora_fin'       => ['required', 'date_format:H:i', 'after:slots.*.hora_inicio'],
+            'slots.*.aula_nro'       => ['required', 'string', 'exists:aula,nro'],
+        ]);
+
+        DB::transaction(function () use ($id, $request, $examen) {
+            foreach ($request->slots as $slot) {
+                CronogramaExamen::updateOrCreate(
+                    ['examen_id' => $id, 'grupo_id' => $slot['grupo_id'], 'convocatoria_id' => $slot['convocatoria_id']],
+                    ['hora_inicio' => $slot['hora_inicio'], 'hora_fin' => $slot['hora_fin'], 'aula_nro' => $slot['aula_nro']]
+                );
+            }
+        });
+
+        BitacoraService::log("Cronograma del examen #{$id} actualizado ({$request->count('slots')} grupos)");
+
+        return response()->json(['mensaje' => 'Cronograma guardado correctamente.']);
     }
 
     // GET /v1/mi-examen — postulante consulta su rol de examen programado

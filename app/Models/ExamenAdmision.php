@@ -8,7 +8,10 @@ class ExamenAdmision extends Model
 {
     protected $table      = 'examen_admision';
     public    $timestamps = false;
-    protected $fillable   = ['descripcion', 'fecha', 'hora_inicio', 'hora_fin', 'estado'];
+    protected $fillable   = [
+        'convocatoria_id', 'numero_examen', 'descripcion',
+        'fecha', 'hora_inicio', 'hora_fin', 'estado',
+    ];
 
     public function asignaciones()
     {
@@ -18,5 +21,15 @@ class ExamenAdmision extends Model
     public function evaluaciones()
     {
         return $this->hasMany(Evaluacion::class, 'examen_id');
+    }
+
+    public function cronograma()
+    {
+        return $this->hasMany(CronogramaExamen::class, 'examen_id')->orderBy('hora_inicio');
+    }
+
+    public function convocatoria()
+    {
+        return $this->belongsTo(Convocatoria::class, 'convocatoria_id', 'id');
     }
 }
