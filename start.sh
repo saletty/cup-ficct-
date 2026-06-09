@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-php artisan config:clear
-php artisan route:clear
-
 # Usar DATABASE_PUBLIC_URL o DATABASE_URL para sobreescribir las vars individuales
 # (railway.internal no resuelve si la red privada no está habilitada)
 _DB_URL="${DATABASE_PUBLIC_URL:-$DATABASE_URL}"
@@ -93,5 +90,10 @@ php artisan db:seed --force || echo "[start.sh] ADVERTENCIA: seed falló, contin
 # Forzar la desactivación justo antes del inicio definitivo
 a2dismod mpm_event mpm_worker || true
 a2enmod mpm_prefork || true
+
+# Limpiar y refrescar la caché justo antes de arrancar Apache
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
 
 exec apache2-foreground
