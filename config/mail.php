@@ -14,9 +14,8 @@ return [
     |
     */
 
-   // 'default' => env('MAIL_MAILER', 'log'),
-    // Cambia esto temporalmente para obligar a usar brevo sin importar Railway
-     'default' => 'brevo',
+    // 1. REEMPLAZA ESTA LÍNEA: Dejamos que Railway controle el driver mediante MAIL_MAILER, usando 'smtp' por defecto
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,6 +38,7 @@ return [
 
     'mailers' => [
 
+        // 2. TU BLOQUE SMTP SE QUEDA ASÍ (Mantiene tu configuración y el parche SSL para Brevo en la región)
         'smtp' => [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
@@ -58,10 +58,11 @@ return [
                 ],
             ],
         ],
-            'brevo' => [
-                'transport' => 'brevo',
-                'key' => env('BREVO_API_KEY'),
-            ],
+
+        'brevo' => [
+            'transport' => 'brevo',
+            'key' => env('BREVO_API_KEY'),
+        ],
 
         'ses' => [
             'transport' => 'ses',
