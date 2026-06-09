@@ -159,8 +159,13 @@ function App() {
     if (puedeVer(key)) setPage(key);
   };
 
-  // Cajero: layout sin sidebar, solo Pagos
-  if (esCajero) {
+  // Cajero y Operador: layout sin sidebar, cabecera propia
+  if (esCajero || esOperador) {
+    const subtitulo   = esCajero ? '· Caja de Admisión' : '· Ventanilla de Registro';
+    const iconoCabeza = esCajero
+      ? 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+      : 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z';
+
     return (
       <div style={{ minHeight: '100vh', background: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
         <header style={{
@@ -172,10 +177,10 @@ function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
               style={{ width: 22, height: 22, opacity: 0.9 }}>
-              <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+              <path d={iconoCabeza}/>
             </svg>
             <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.01em' }}>CUP FICCT</span>
-            <span style={{ opacity: 0.55, fontSize: '0.78rem' }}>· Caja de Admisión</span>
+            <span style={{ opacity: 0.55, fontSize: '0.78rem' }}>{subtitulo}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '0.83rem' }}>
             <span style={{ opacity: 0.85 }}>{auth.usuario?.nombre_completo}</span>
@@ -189,7 +194,7 @@ function App() {
           </div>
         </header>
         <main style={{ flex: 1, padding: '2rem 2.5rem', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
-          <Pagos />
+          {esCajero ? <Pagos /> : <Ventanilla />}
         </main>
       </div>
     );
