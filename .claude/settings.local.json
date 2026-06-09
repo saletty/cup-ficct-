@@ -26,7 +26,10 @@
       "Bash(curl -s http://127.0.0.1:8000/api/v1/registro/carreras -H \"Accept: application/json\")",
       "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"coord@ficct.edu.bo\",\"password\":\"WRONG\"}')",
       "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"identifier\":\"coord@ficct.edu.bo\",\"password\":\"Coord123\"}')",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":12345678}')"
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":12345678}')",
+      "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/pages/**)",
+      "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/components/**)",
+      "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/**)"
     ]
   }
 }

@@ -1,29 +1,35 @@
 import { useState } from 'react';
-import Login          from './components/Login';
-import Dashboard      from './components/Dashboard';
-import Layout         from './components/Layout';
-import Bitacora       from './pages/Bitacora';
-import Carreras       from './pages/Carreras';
-import Postulantes    from './pages/Postulantes';
-import Bachillerato   from './pages/Bachillerato';
-import Inscripcion    from './pages/Inscripcion';
-import Convocatorias  from './pages/Convocatorias';
-import Docentes       from './pages/Docentes';
-import Grupos         from './pages/Grupos';
-import CargaHoraria   from './pages/CargaHoraria';
-import TiposPago      from './pages/TiposPago';
-import Pagos          from './pages/Pagos';
-import Examenes       from './pages/Examenes';
-import Evaluaciones   from './pages/Evaluaciones';
-import MisResultados  from './pages/MisResultados';
-import DashboardAdmin          from './pages/DashboardAdmin';
-import DashboardPostulante     from './pages/DashboardPostulante';
-import Reportes                from './pages/Reportes';
-import MiInscripcionPostulante from './pages/MiInscripcionPostulante';
-import MisHorarios             from './pages/MisHorarios';
-import Usuarios                from './pages/Usuarios';
-import ControlAcceso           from './pages/ControlAcceso';
-import Ventanilla             from './pages/Ventanilla';
+// shared — shell de la app
+import Login     from './shared/Login';
+import Dashboard from './shared/Dashboard';
+import Layout    from './shared/Layout';
+// PKG 1 — Gestión de Acceso y Seguridad (CU1–CU6)
+import Usuarios     from './features/seguridad/Usuarios';
+import Roles        from './features/seguridad/Roles';
+import Bitacora     from './features/seguridad/Bitacora';
+import ControlAcceso from './features/seguridad/ControlAcceso';
+// PKG 2 — Gestión de Personas y Estructura (CU7–CU11)
+import Carreras     from './features/personas/Carreras';
+import Postulantes  from './features/personas/Postulantes';
+import Bachillerato from './features/personas/Bachillerato';
+import Convocatorias from './features/personas/Convocatorias';
+import Docentes     from './features/personas/Docentes';
+import Ventanilla   from './features/personas/Ventanilla';
+// PKG 3 — Gestión Operativa del CUP (CU9, CU12–CU17)
+import Inscripcion             from './features/operativa/Inscripcion';
+import MiInscripcionPostulante from './features/operativa/MiInscripcionPostulante';
+import CargaHoraria            from './features/operativa/CargaHoraria';
+import MisHorarios             from './features/operativa/MisHorarios';
+import Grupos                  from './features/operativa/Grupos';
+import TiposPago               from './features/operativa/TiposPago';
+import Pagos                   from './features/operativa/Pagos';
+import Examenes                from './features/operativa/Examenes';
+import Evaluaciones            from './features/operativa/Evaluaciones';
+// PKG 4 — Gestión de Reportes y Estadísticas (CU18–CU21)
+import DashboardAdmin      from './features/reportes/DashboardAdmin';
+import DashboardPostulante from './features/reportes/DashboardPostulante';
+import MisResultados       from './features/reportes/MisResultados';
+import Reportes            from './features/reportes/Reportes';
 
 /*
  * ================================================================

@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Convocatoria;
-use App\Services\BitacoraService;
+use App\Services\Seguridad\BitacoraService;
 use Illuminate\Console\Command;
 
 class ExpirarConvocatorias extends Command
