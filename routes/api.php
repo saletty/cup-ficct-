@@ -113,6 +113,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
 
     /* ── Administrador: usuarios, roles, permisos, bitácora ── */
     Route::middleware('permiso:Gestionar usuarios')->group(function () {
+        Route::post('/usuarios/importar-postulantes', [UsuarioController::class, 'importarPostulantes']);
+        Route::post('/usuarios/importar-docentes',    [UsuarioController::class, 'importarDocentes']);
         Route::apiResource('usuarios', UsuarioController::class);
         Route::apiResource('roles', RolController::class);
         Route::get('/permisos',                          [PermisoController::class, 'index']);

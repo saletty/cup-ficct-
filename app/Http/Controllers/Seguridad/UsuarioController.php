@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Seguridad;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Seguridad\StoreUsuarioRequest;
 use App\Http\Requests\Seguridad\UpdateUsuarioRequest;
+use App\Imports\Seguridad\DocentesImport;
+use App\Imports\Seguridad\PostulantesImport;
 use App\Models\User;
 use App\Services\Seguridad\BitacoraService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * CU3 - Gestionar Usuarios
@@ -79,6 +83,62 @@ class UsuarioController extends Controller
         return response()->json([
             'mensaje'  => 'Usuario actualizado correctamente.',
             'usuario'  => $user->fresh()->load('rol'),
+        ]);
+    }
+
+    // Carga masiva de postulantes desde Excel/CSV (contraseña = CI)
+    public function importarPostulantes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'archivo' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:4096'],
+        ], [
+            'archivo.required' => 'Debe adjuntar un archivo.',
+            'archivo.mimes'    => 'El archivo debe ser .xlsx, .xls o .csv.',
+            'archivo.max'      => 'El archivo no debe superar 4 MB.',
+        ]);
+
+        $import = new PostulantesImport();
+        Excel::import($import, $request->file('archivo'));
+
+        $resultados = $import->resultados;
+        $creados    = count(array_filter($resultados, fn($r) => $r['estado'] === 'creado'));
+        $omitidos   = count(array_filter($resultados, fn($r) => $r['estado'] === 'omitido'));
+        $errores    = count(array_filter($resultados, fn($r) => $r['estado'] === 'error'));
+
+        BitacoraService::log("Carga masiva postulantes: {$creados} creados, {$omitidos} omitidos, {$errores} errores.");
+
+        return response()->json([
+            'mensaje' => "Importación completada: {$creados} creados, {$omitidos} omitidos, {$errores} con error.",
+            'resumen' => compact('creados', 'omitidos', 'errores'),
+            'detalle' => $resultados,
+        ]);
+    }
+
+    // Carga masiva de docentes desde Excel/CSV (contraseña = CI)
+    public function importarDocentes(Request $request): JsonResponse
+    {
+        $request->validate([
+            'archivo' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:4096'],
+        ], [
+            'archivo.required' => 'Debe adjuntar un archivo.',
+            'archivo.mimes'    => 'El archivo debe ser .xlsx, .xls o .csv.',
+            'archivo.max'      => 'El archivo no debe superar 4 MB.',
+        ]);
+
+        $import = new DocentesImport();
+        Excel::import($import, $request->file('archivo'));
+
+        $resultados = $import->resultados;
+        $creados    = count(array_filter($resultados, fn($r) => $r['estado'] === 'creado'));
+        $omitidos   = count(array_filter($resultados, fn($r) => $r['estado'] === 'omitido'));
+        $errores    = count(array_filter($resultados, fn($r) => $r['estado'] === 'error'));
+
+        BitacoraService::log("Carga masiva docentes: {$creados} creados, {$omitidos} omitidos, {$errores} errores.");
+
+        return response()->json([
+            'mensaje' => "Importación completada: {$creados} creados, {$omitidos} omitidos, {$errores} con error.",
+            'resumen' => compact('creados', 'omitidos', 'errores'),
+            'detalle' => $resultados,
         ]);
     }
 
