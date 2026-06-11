@@ -17,29 +17,75 @@ use Illuminate\Support\Facades\Hash;
 
 class ConvocatoriaHistoricaSeeder extends Seeder
 {
-    // 17 grupos con cupo máx 70, turno y modalidad asignados
+    // 17 grupos — todos presenciales, cupo máx 70, con turno
     private array $gruposConfig = [
         ['id' => 'H25-SISP-1', 'carrera_id' => 'SIS-P', 'modalidad' => 'presencial', 'turno' => 'mañana'],
         ['id' => 'H25-SISP-2', 'carrera_id' => 'SIS-P', 'modalidad' => 'presencial', 'turno' => 'tarde'],
         ['id' => 'H25-SISP-3', 'carrera_id' => 'SIS-P', 'modalidad' => 'presencial', 'turno' => 'noche'],
         ['id' => 'H25-SISP-4', 'carrera_id' => 'SIS-P', 'modalidad' => 'presencial', 'turno' => 'mañana'],
-        ['id' => 'H25-SISV-1', 'carrera_id' => 'SIS-V', 'modalidad' => 'virtual',    'turno' => 'mañana'],
-        ['id' => 'H25-SISV-2', 'carrera_id' => 'SIS-V', 'modalidad' => 'virtual',    'turno' => 'tarde'],
-        ['id' => 'H25-SISV-3', 'carrera_id' => 'SIS-V', 'modalidad' => 'virtual',    'turno' => 'noche'],
+        ['id' => 'H25-SISV-1', 'carrera_id' => 'SIS-V', 'modalidad' => 'presencial', 'turno' => 'mañana'],
+        ['id' => 'H25-SISV-2', 'carrera_id' => 'SIS-V', 'modalidad' => 'presencial', 'turno' => 'tarde'],
+        ['id' => 'H25-SISV-3', 'carrera_id' => 'SIS-V', 'modalidad' => 'presencial', 'turno' => 'noche'],
         ['id' => 'H25-INFP-1', 'carrera_id' => 'INF-P', 'modalidad' => 'presencial', 'turno' => 'mañana'],
         ['id' => 'H25-INFP-2', 'carrera_id' => 'INF-P', 'modalidad' => 'presencial', 'turno' => 'tarde'],
         ['id' => 'H25-INFP-3', 'carrera_id' => 'INF-P', 'modalidad' => 'presencial', 'turno' => 'noche'],
-        ['id' => 'H25-INFV-1', 'carrera_id' => 'INF-V', 'modalidad' => 'virtual',    'turno' => 'mañana'],
-        ['id' => 'H25-INFV-2', 'carrera_id' => 'INF-V', 'modalidad' => 'virtual',    'turno' => 'tarde'],
-        ['id' => 'H25-INFV-3', 'carrera_id' => 'INF-V', 'modalidad' => 'virtual',    'turno' => 'noche'],
+        ['id' => 'H25-INFV-1', 'carrera_id' => 'INF-V', 'modalidad' => 'presencial', 'turno' => 'mañana'],
+        ['id' => 'H25-INFV-2', 'carrera_id' => 'INF-V', 'modalidad' => 'presencial', 'turno' => 'tarde'],
+        ['id' => 'H25-INFV-3', 'carrera_id' => 'INF-V', 'modalidad' => 'presencial', 'turno' => 'noche'],
         ['id' => 'H25-ROB-1',  'carrera_id' => 'ROB',   'modalidad' => 'presencial', 'turno' => 'mañana'],
         ['id' => 'H25-ROB-2',  'carrera_id' => 'ROB',   'modalidad' => 'presencial', 'turno' => 'tarde'],
         ['id' => 'H25-NET-1',  'carrera_id' => 'NET',   'modalidad' => 'presencial', 'turno' => 'mañana'],
         ['id' => 'H25-NET-2',  'carrera_id' => 'NET',   'modalidad' => 'presencial', 'turno' => 'tarde'],
     ];
 
+    // Slots de clase por turno (21 entradas c/u = 63 plantillas globales)
+    private array $slots = [
+        'mañana' => [
+            ['07:00:00', '08:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['08:30:00', '10:00:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['10:00:00', '11:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['12:30:00', '13:00:00', ['Martes','Jueves','Sábado']],
+        ],
+        'tarde' => [
+            ['13:00:00', '14:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['14:30:00', '16:00:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['16:00:00', '17:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['17:30:00', '19:00:00', ['Martes','Jueves','Sábado']],
+        ],
+        'noche' => [
+            ['17:30:00', '19:00:00', ['Lunes','Miércoles','Viernes']],
+            ['19:00:00', '20:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['20:30:00', '21:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+            ['21:00:00', '22:30:00', ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']],
+        ],
+    ];
+
+    // Piso base por turno: mañana=1er piso (11-17), tarde=2do (21-27), noche=3ro (31-37)
+    private array $aulaBase = ['mañana' => 11, 'tarde' => 21, 'noche' => 31];
+
     public function run(): void
     {
+        // ── 0. Horarios plantilla globales (idempotente) ──────────────
+        if (!DB::table('horario')->whereNull('grupo_id')->exists()) {
+            $plantillas = [];
+            foreach ($this->slots as $turno => $bloques) {
+                foreach ($bloques as [$inicio, $fin, $dias]) {
+                    foreach ($dias as $dia) {
+                        $plantillas[] = [
+                            'grupo_id'        => null,
+                            'convocatoria_id' => null,
+                            'dia'             => $dia,
+                            'hora_inicio'     => $inicio,
+                            'hora_fin'        => $fin,
+                            'aula_nro'        => null,
+                            'turno'           => $turno,
+                        ];
+                    }
+                }
+            }
+            DB::table('horario')->insert($plantillas);
+        }
+
         if (User::where('CI', 7000001)->exists()) {
             $this->command->warn('Ya ejecutado — saltando. Eliminá los usuarios CI 7000001-7001000 si querés volver a correrlo.');
             return;
@@ -76,6 +122,17 @@ class ConvocatoriaHistoricaSeeder extends Seeder
             $aulaNros[] = $nro;
         }
 
+        // Aulas por pisos para H-2025: 1er piso (11-17), 2do (21-27), 3ro (31-37)
+        foreach ($this->aulaBase as $turno => $base) {
+            for ($i = 0; $i < 7; $i++) {
+                $nro = (string)($base + $i);
+                Aula::firstOrCreate(
+                    ['nro' => $nro],
+                    ['capacidad' => 110, 'descripcion' => "Aula {$nro} — " . ucfirst($turno), 'estado' => 'activo']
+                );
+            }
+        }
+
         // ── 4. Carreras ───────────────────────────────────────────────
         $carrerasBase = [
             'SIS-V' => 'Ing. en Sistemas (Virtual)',
@@ -103,6 +160,33 @@ class ConvocatoriaHistoricaSeeder extends Seeder
             ]);
             $gruposPorCarrera[$g['carrera_id']][] = $g['id'];
         }
+
+        // ── 5b. Horarios por grupo (aula secuencial por turno/piso) ──
+        $aulaIdx  = ['mañana' => 0, 'tarde' => 0, 'noche' => 0];
+        $horarios = [];
+        foreach ($this->gruposConfig as $g) {
+            $turno   = $g['turno'];
+            $aulaNro = (string)($this->aulaBase[$turno] + $aulaIdx[$turno]);
+            $aulaIdx[$turno]++;
+
+            foreach ($this->slots[$turno] as [$inicio, $fin, $dias]) {
+                foreach ($dias as $dia) {
+                    $horarios[] = [
+                        'grupo_id'        => $g['id'],
+                        'convocatoria_id' => 'H-2025',
+                        'dia'             => $dia,
+                        'hora_inicio'     => $inicio,
+                        'hora_fin'        => $fin,
+                        'aula_nro'        => $aulaNro,
+                        'turno'           => $turno,
+                    ];
+                }
+            }
+        }
+        foreach (array_chunk($horarios, 100) as $chunk) {
+            DB::table('horario')->insertOrIgnore($chunk);
+        }
+        $this->command->info('Horarios asignados: ' . count($horarios) . ' registros (17 grupos × 21 slots)');
 
         // ── 6. Tres exámenes de admisión ──────────────────────────────
         $examen1 = ExamenAdmision::firstOrCreate(
