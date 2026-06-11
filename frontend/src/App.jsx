@@ -10,8 +10,7 @@ import Bitacora     from './features/seguridad/Bitacora';
 import ControlAcceso from './features/seguridad/ControlAcceso';
 // PKG 2 — Gestión de Personas y Estructura (CU7–CU11)
 import Carreras     from './features/personas/Carreras';
-import Postulantes  from './features/personas/Postulantes';
-import Bachillerato from './features/personas/Bachillerato';
+import Postulantes   from './features/personas/Postulantes';
 import Convocatorias from './features/personas/Convocatorias';
 import Docentes     from './features/personas/Docentes';
 import Ventanilla   from './features/personas/Ventanilla';
@@ -44,8 +43,8 @@ import Reportes            from './features/reportes/Reportes';
  * CU7  Gestionar Carreras   → page 'carreras'  → <Carreras>
  * CU8  Gestionar Postulantes→ page 'postulantes' → <Postulantes>
  *                             + flujo registro en <Login>
- * CU9  Info. Bachillerato   → page 'bachillerato' → <Bachillerato>
- * CU10 Inscripción CUP      → page 'inscripcion'  → <Inscripcion>
+ *                             (datos de bachillerato: atributos del postulante)
+ * CU9  Registrar Inscripción→ page 'inscripcion'  → <Inscripcion>
  * CU11 Convocatorias        → page 'convocatorias' (pendiente frontend)
  * CU12 Gestionar Docentes   → page 'docentes'      (pendiente frontend)
  * CU13 Carga Horaria        → page 'carga-horaria' (pendiente frontend)
@@ -66,7 +65,6 @@ const PERMISOS_PAGINAS = {
   dashboard:       null,
   inscripcion:     null,
   postulantes:     'Gestionar postulantes',
-  bachillerato:    'Gestionar postulantes',
   carreras:        'Gestionar carreras',
   convocatorias:   'Gestionar convocatorias',
   grupos:          'Gestionar grupos',
@@ -153,7 +151,6 @@ function App() {
     dashboard:     esPostulante ? <DashboardPostulante usuario={auth.usuario} /> : <DashboardAdmin />,
     inscripcion:   esPostulante ? <MiInscripcionPostulante usuario={auth.usuario} /> : <Inscripcion />,
     postulantes:   <Postulantes />,
-    bachillerato:  <Bachillerato />,
     carreras:      <Carreras />,
     bitacora:      <Bitacora />,
     usuarios:        <Usuarios />,

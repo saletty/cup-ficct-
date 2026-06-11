@@ -48,6 +48,8 @@ export default function Postulantes() {
       ciudad: item.ciudad ?? '',
       carrera_opcion1_id: item.carrera_opcion1_id ?? '',
       carrera_opcion2_id: item.carrera_opcion2_id ?? '',
+      colegio_procedencia: item.colegio_procedencia ?? '',
+      anio_egreso: item.anio_egreso ?? '',
     });
     setError('');
     setModal({ tipo:'editar', item });
@@ -208,6 +210,8 @@ export default function Postulantes() {
                     { key:'telefono', label:'Teléfono', type:'text' },
                     { key:'direccion', label:'Dirección', type:'text' },
                     { key:'ciudad', label:'Ciudad', type:'text' },
+                    { key:'colegio_procedencia', label:'Colegio de procedencia', type:'text' },
+                    { key:'anio_egreso', label:'Año de egreso', type:'number' },
                   ].map(f => (
                     <div className="pg-field" key={f.key}>
                       <label>{f.label}</label>

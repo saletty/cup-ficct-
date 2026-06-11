@@ -23,11 +23,31 @@ const CARRERAS_STATIC = [
   { nombre: 'Ingeniería en Robótica', descripcion: 'Mecatrónica, electrónica e inteligencia artificial para diseñar sistemas autónomos aplicados a industria, medicina y exploración.', duracion: '5 años', icon: 'robotics', modalidad: 'Presencial' },
 ];
 
-const MATERIAS = [
-  { nombre: 'Computación', descripcion: 'Lógica de programación, algoritmos, pseudocódigo y manejo básico de herramientas informáticas.', porcentaje: 25, examenes: 3 },
-  { nombre: 'Matemáticas', descripcion: 'Álgebra, geometría analítica, trigonometría y fundamentos de cálculo diferencial.', porcentaje: 25, examenes: 3 },
-  { nombre: 'Inglés', descripcion: 'Comprensión lectora, gramática básica y vocabulario técnico. Nivel A2–B1.', porcentaje: 25, examenes: 3 },
-  { nombre: 'Física', descripcion: 'Mecánica clásica, electricidad, magnetismo, óptica y termodinámica aplicada.', porcentaje: 25, examenes: 3 },
+const MATERIAS =[
+  { 
+    nombre: 'Computación', 
+    descripcion: 'Historia de la computación, sistemas de numeración (binario, octal, hexadecimal), conceptos básicos de hardware/software, lógica de programación, algoritmos y diagramas de flujo.', 
+    porcentaje: 25, 
+    examenes: 3 
+  },
+  { 
+    nombre: 'Matemáticas', 
+    descripcion: 'Lógica matemática, teoría de conjuntos, sistemas de ecuaciones, polinomios, funciones, inecuaciones y trigonometría.', 
+    porcentaje: 25, 
+    examenes: 3 
+  },
+  { 
+    nombre: 'Inglés', 
+    descripcion: 'Gramática, ortografía, comprensión de textos, técnicas de lectura crítica, estructura y redacción de textos.', 
+    porcentaje: 25, 
+    examenes: 3 
+  },
+  { 
+    nombre: 'Física', 
+    descripcion: 'Vectores, cinemática (MRU, MRUV, movimiento parabólico), dinámica (Leyes de Newton), estática, trabajo, energía y potencia.', 
+    porcentaje: 25, 
+    examenes: 3 
+  }
 ];
 
 /* ── Íconos SVG ─────────────────────────────────────────────── */

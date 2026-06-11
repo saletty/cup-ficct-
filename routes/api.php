@@ -20,7 +20,6 @@
  |      Flujo ventanilla (Paso 1)   POST   /v1/registro/operador
  |      Flujo web (Paso 2a/2b)      POST   /v1/registro/verificar-ci
  |                                  POST   /v1/registro/completar
- |      Información de Bachillerato GET/PUT /v1/postulantes/{ci}/bachillerato
  | CU10 Gestionar Convocatorias     CRUD   /v1/convocatorias
  | CU11 Gestionar Docentes          CRUD   /v1/docentes
  |-------------------------------------------------------------

@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 // CU8 — Gestionar Postulantes
-// CU9 — Gestionar Información de Bachillerato
 class PostulanteController extends Controller
 {
     /* ── CU8: Listar todos los postulantes ──────────────────── */
@@ -64,6 +63,8 @@ class PostulanteController extends Controller
             'ciudad'              => ['sometimes', 'string', 'max:100'],
             'carrera_opcion1_id'  => ['sometimes', 'string', 'exists:carrera,id'],
             'carrera_opcion2_id'  => ['nullable', 'string', 'exists:carrera,id'],
+            'colegio_procedencia' => ['sometimes', 'nullable', 'string', 'max:150'],
+            'anio_egreso'         => ['sometimes', 'nullable', 'integer', 'min:1990', 'max:' . now()->year],
         ]);
 
         $dataUsuario = $request->validate([
@@ -97,7 +98,6 @@ class PostulanteController extends Controller
         return response()->json(['mensaje' => 'Postulante eliminado del sistema.']);
     }
 
-    /* ── CU9: Ver información de bachillerato ───────────────── */
     public function bachillerato(int $ci): JsonResponse
     {
         $postulante = Postulante::select([
@@ -108,7 +108,6 @@ class PostulanteController extends Controller
         return response()->json($postulante);
     }
 
-    /* ── CU9: Actualizar información de bachillerato ────────── */
     public function actualizarBachillerato(Request $request, int $ci): JsonResponse
     {
         $postulante = Postulante::findOrFail($ci);
