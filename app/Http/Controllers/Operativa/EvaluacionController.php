@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 // CU17 — Gestionar Resultados de Admisión
-// CU19 — Consultar Resultados (vista postulante)
+// CU18 — Consultar Resultados de Admisión (vista postulante)
 class EvaluacionController extends Controller
 {
     /* ─── CU17: CRUD de evaluaciones ───────────────────────────── */
@@ -112,7 +112,7 @@ class EvaluacionController extends Controller
         return response()->json(['mensaje' => 'Evaluación eliminada.']);
     }
 
-    /* ─── CU19: Consulta de resultados del postulante ───────────── */
+    /* ─── CU18: Consultar Resultados de Admisión (postulante) ───── */
 
     public function misResultados(): JsonResponse
     {

@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 // CU10 — Gestionar Convocatorias
-// CU20 — Calcular Cantidad de Grupos (CEIL / 70)
+// CU19 — Calcular Cantidad de Grupos (Algoritmo Techo)
 class ConvocatoriaController extends Controller
 {
     private const LIMITE_POR_GRUPO = 70;
@@ -95,7 +95,7 @@ class ConvocatoriaController extends Controller
         return response()->json(['mensaje' => 'Convocatoria eliminada.']);
     }
 
-    // CU20 — Calcular Cantidad de Grupos (Algoritmo Techo: CEIL / 70)
+    // CU19 — Calcular Cantidad de Grupos (Algoritmo Techo: CEIL / 70)
     public function calcularGrupos(string $id): JsonResponse
     {
         $convocatoria = Convocatoria::findOrFail($id);
@@ -108,7 +108,7 @@ class ConvocatoriaController extends Controller
         $gruposNecesarios = $totalInscritos === 0 ? 0 : (int) ceil($totalInscritos / $limite);
 
         BitacoraService::log(
-            "CU20 cálculo de grupos — convocatoria {$id}: {$totalInscritos} inscritos → {$gruposNecesarios} grupo(s)"
+            "CU19 cálculo de grupos — convocatoria {$id}: {$totalInscritos} inscritos → {$gruposNecesarios} grupo(s)"
         );
 
         return response()->json([

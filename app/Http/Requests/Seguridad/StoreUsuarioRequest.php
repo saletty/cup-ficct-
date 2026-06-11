@@ -18,7 +18,7 @@ class StoreUsuarioRequest extends FormRequest
             'nombre_completo' => ['required', 'string', 'max:150'],
             'email'          => ['required', 'email', 'max:120', 'unique:usuario,email'],
             'password'       => ['required', 'string', 'min:8'],
-            'estado'         => ['nullable', 'in:activo,inactivo'],
+            'estado'         => ['nullable', 'in:ACTIVO,INACTIVO'],
             'rol_id'         => ['required', 'integer', 'exists:rol,id'],
         ];
     }
@@ -35,6 +35,7 @@ class StoreUsuarioRequest extends FormRequest
             'email.unique'             => 'Ya existe un usuario con ese correo.',
             'password.required'        => 'La contraseña es obligatoria.',
             'password.min'             => 'La contraseña debe tener al menos 8 caracteres.',
+            'estado.in'                => 'El estado debe ser ACTIVO o INACTIVO.',
             'rol_id.required'          => 'El rol es obligatorio.',
             'rol_id.exists'            => 'El rol seleccionado no existe.',
         ];

@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 // CU13 — Gestionar Grupos y Horarios
-// Límite por grupo: 70 estudiantes (CEIL/70 — CU20)
+// Límite por grupo: 70 estudiantes (CEIL/70 — CU19)
 const LIMITE_GRUPO = 70;
 
 class GrupoController extends Controller
@@ -249,7 +249,7 @@ class GrupoController extends Controller
         ], 201);
     }
 
-    /* ── Generación automática de grupos (CU20) ──────────────── */
+    /* ── Generación automática de grupos (CU19) ──────────────── */
     public function generarGrupos(Request $request): JsonResponse
     {
         $data = $request->validate([
