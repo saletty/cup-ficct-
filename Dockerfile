@@ -1,9 +1,11 @@
 FROM php:8.2-apache
 
-# Dependencias de sistema + extensiones PHP para Laravel + PostgreSQL
+# Dependencias de sistema + extensiones PHP para Laravel + PostgreSQL + GD (requerido por PhpSpreadsheet)
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev zip unzip curl git \
-    && docker-php-ext-install pdo pdo_pgsql zip bcmath \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql zip bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Habilitar mod_rewrite y mod_headers; desactivar MPMs extra para evitar conflicto
