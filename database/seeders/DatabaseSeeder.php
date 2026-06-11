@@ -213,7 +213,7 @@ class DatabaseSeeder extends Seeder
             ['CI' => 5001003, 'profesion' => 'Licenciado en Idiomas',    'maestria' => 'Maestría en Educación Bilingüe',       'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
             ['CI' => 5001004, 'profesion' => 'Licenciada en Física',     'maestria' => 'Maestría en Física Molecular',         'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
             ['CI' => 5001005, 'profesion' => 'Licenciado en Matemáticas','maestria' => 'Maestría en Matemática Aplicada',      'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
-            ['CI' => 5001006, 'profesion' => 'Licenciada en Letras',     'maestria' => 'Maestría en Lingüística Aplicada',     'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001006, 'profesion' => 'Licenciada en Inglés',      'maestria' => 'Maestría en Enseñanza del Inglés',     'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
             ['CI' => 5001007, 'profesion' => 'Ingeniero en Física',      'maestria' => 'Maestría en Física Nuclear',           'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
             ['CI' => 5001008, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Ciencias de la Computación','diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
             // Docentes adicionales (5 por materia = capacidad para 17 grupos H-2025)
@@ -224,10 +224,10 @@ class DatabaseSeeder extends Seeder
             ['CI' => 5001013, 'profesion' => 'Licenciado en Matemáticas','maestria' => 'Maestría en Estadística',                 'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
             ['CI' => 5001014, 'profesion' => 'Licenciada en Matemáticas','maestria' => 'Maestría en Matemática Aplicada',         'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
             ['CI' => 5001015, 'profesion' => 'Licenciado en Lingüística','maestria' => 'Maestría en Enseñanza del Inglés',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
-            ['CI' => 5001016, 'profesion' => 'Licenciada en Letras',     'maestria' => 'Maestría en Lingüística Computacional',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001016, 'profesion' => 'Licenciada en Inglés',      'maestria' => 'Maestría en Literatura Inglesa',           'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
             ['CI' => 5001017, 'profesion' => 'Licenciado en Idiomas',    'maestria' => 'Maestría en Lingüística Aplicada',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
             ['CI' => 5001018, 'profesion' => 'Ingeniera en Física',      'maestria' => 'Maestría en Física Teórica',              'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
-            ['CI' => 5001019, 'profesion' => 'Ingeniero en Electrónica', 'maestria' => 'Maestría en Física Aplicada',             'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001019, 'profesion' => 'Ingeniero en Física',      'maestria' => 'Maestría en Física Experimental',         'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
             ['CI' => 5001020, 'profesion' => 'Licenciada en Física',     'maestria' => 'Maestría en Física Computacional',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
         ];
 
