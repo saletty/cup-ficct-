@@ -46,22 +46,26 @@
  |      Asignar postulante          GET/POST /v1/examenes/{id}/asignaciones
  |      Auto-distribuir             POST   /v1/examenes/{id}/asignaciones/auto
  |      Quitar asignación           DELETE /v1/examenes/{id}/asignaciones/{asignId}
- | CU17 Gestionar Evaluaciones      CRUD   /v1/evaluaciones
+ | CU17 Gestionar Resultados        CRUD   /v1/evaluaciones
  |      Por postulante (staff)      GET    /v1/evaluaciones/postulante/{ci}
  |      Mi examen (postulante)      GET    /v1/mi-examen
+ |      Cupos por carrera           GET/POST/DELETE /v1/admisiones/cupos
+ |      Procesar asignación         POST   /v1/admisiones/procesar
+ |      Ver resultados admisión     GET    /v1/admisiones/resultados
  |-------------------------------------------------------------
  | PKG 4 — GESTIÓN DE REPORTES Y ESTADÍSTICAS
  |-------------------------------------------------------------
  | CU18 Consultar Resultados        GET    /v1/mis-resultados
  | CU19 Calcular Cantidad de Grupos GET    /v1/convocatorias/{id}/calcular-grupos
  | CU20 Visualizar Dashboard        GET    /v1/dashboard/stats
- | CU21 Generar Reportes            GET    /v1/reportes/{postulantes|estadisticas|docentes}
+ | CU21 Generar Reportes            GET    /v1/reportes/{postulantes|estadisticas|docentes|ranking}
  |=============================================================
  */
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Reportes\DashboardController;
 use App\Http\Controllers\Reportes\ReporteController;
+use App\Http\Controllers\Operativa\AdmisionController;
 use App\Http\Controllers\Operativa\AsignacionDocenteController;
 use App\Http\Controllers\Operativa\AsistenciaController;
 use App\Http\Controllers\Operativa\AulaController;
@@ -239,7 +243,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::delete('/examenes/{id}/asignaciones/{asignId}',      [ExamenAdmisionController::class, 'quitarAsignacion']);
     });
 
-    /* ── CU17: Evaluaciones (Coordinador) ── */
+    /* ── CU17: Gestionar Resultados de Admisión ── */
     Route::middleware('permiso:Gestionar exámenes')->group(function () {
         Route::get('/evaluaciones',                     [EvaluacionController::class, 'index']);
         Route::post('/evaluaciones',                    [EvaluacionController::class, 'store']);
@@ -256,6 +260,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
 
     /* ── CU20: Dashboard estadístico (cualquier usuario autenticado) ── */
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+
+    /* ── CU22: Admisión por carrera (cupos + algoritmo de asignación) ── */
+    Route::middleware('permiso:Gestionar convocatorias')->group(function () {
+        Route::get('/admisiones/cupos',                               [AdmisionController::class, 'indexCupos']);
+        Route::post('/admisiones/cupos',                              [AdmisionController::class, 'upsertCupo']);
+        Route::delete('/admisiones/cupos/{carreraId}/{convId}',       [AdmisionController::class, 'destroyCupo']);
+        Route::post('/admisiones/procesar',                           [AdmisionController::class, 'procesar']);
+        Route::get('/admisiones/resultados',                          [AdmisionController::class, 'resultados']);
+    });
 
     /* ── CU21: Reportes estadísticos ── */
     Route::middleware('permiso:Ver reportes')->group(function () {

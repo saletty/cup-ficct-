@@ -241,7 +241,6 @@ export default function Reportes() {
         ? g.docentes.map(d => ({
             Grupo:        g.grupo_id,
             Convocatoria: g.convocatoria,
-            Carrera:      g.carrera,
             Modalidad:    g.modalidad,
             Cupo_Maximo:  g.cupo_maximo,
             Estado:       g.estado,
@@ -252,7 +251,6 @@ export default function Reportes() {
         : [{
             Grupo:        g.grupo_id,
             Convocatoria: g.convocatoria,
-            Carrera:      g.carrera,
             Modalidad:    g.modalidad,
             Cupo_Maximo:  g.cupo_maximo,
             Estado:       g.estado,
@@ -269,7 +267,6 @@ export default function Reportes() {
       <tr>
         <td>${g.grupo_id}</td>
         <td>${g.convocatoria}</td>
-        <td>${g.carrera}</td>
         <td>${g.modalidad ?? '—'}</td>
         <td style="text-align:center">${g.cupo_maximo}</td>
         <td class="${g.estado}">${g.estado}</td>
@@ -278,7 +275,7 @@ export default function Reportes() {
     exportarPDF('Relación de Docentes por Grupo — CU22', `
       <table>
         <thead><tr>
-          <th>Grupo</th><th>Convocatoria</th><th>Carrera</th>
+          <th>Grupo</th><th>Convocatoria</th>
           <th>Modalidad</th><th>Cupo</th><th>Estado</th><th>Docentes / Materia</th>
         </tr></thead>
         <tbody>${rows}</tbody>
@@ -688,19 +685,18 @@ export default function Reportes() {
               <table className="pg-table">
                 <thead>
                   <tr>
-                    <th>Grupo</th><th>Convocatoria</th><th>Carrera</th>
+                    <th>Grupo</th><th>Convocatoria</th>
                     <th>Modalidad</th><th>Cupo</th><th>Estado</th>
                     <th>Docentes asignados</th>
                   </tr>
                 </thead>
                 <tbody>
                   {grupos.length === 0
-                    ? <tr><td colSpan={7} className="pg-empty">No hay grupos registrados</td></tr>
+                    ? <tr><td colSpan={6} className="pg-empty">No hay grupos registrados</td></tr>
                     : grupos.map(g => (
                       <tr key={g.grupo_id + g.convocatoria}>
                         <td style={{ fontWeight: 700 }}>{g.grupo_id}</td>
                         <td style={{ fontSize: '0.78rem' }}>{g.convocatoria}</td>
-                        <td style={{ fontSize: '0.78rem' }}>{g.carrera}</td>
                         <td style={{ fontSize: '0.78rem', textTransform: 'capitalize' }}>{g.modalidad ?? '—'}</td>
                         <td style={{ textAlign: 'center' }}>{g.cupo_maximo}</td>
                         <td>

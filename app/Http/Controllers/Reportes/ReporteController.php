@@ -237,7 +237,7 @@ class ReporteController extends Controller
     // Reporte 3 — Docentes asignados por grupo + grupos con mayor rendimiento
     public function docentes(): JsonResponse
     {
-        $grupos = Grupo::with(['convocatoria:id,nombre', 'carrera:id,nombre_carrera'])
+        $grupos = Grupo::with(['convocatoria:id,nombre'])
             ->orderBy('convocatoria_id')
             ->orderBy('id')
             ->get();
@@ -267,7 +267,6 @@ class ReporteController extends Controller
             return [
                 'grupo_id'       => $g->id,
                 'convocatoria'   => $g->convocatoria?->nombre ?? $g->convocatoria_id,
-                'carrera'        => $g->carrera?->nombre_carrera ?? '—',
                 'modalidad'      => $g->modalidad,
                 'cupo_maximo'    => $g->cupo_maximo,
                 'estado'         => $g->estado,

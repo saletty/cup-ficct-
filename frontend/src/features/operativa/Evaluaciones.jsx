@@ -1,7 +1,8 @@
 ﻿// ============================================================
-// CU18 — Gestionar Resultados de Admisión
+// CU17 — Gestionar Resultados de Admisión
 // Registro y cálculo de notas con regla de nota mínima (≥60).
 // nota_examen1 = Computación · nota_examen2 = Matemáticas · nota_examen3 = Inglés · nota_examen4 = Física
+// Incluye procesamiento de admisión por carrera (cupos + asignación automática).
 // ============================================================
 import { useState, useEffect } from 'react';
 import client from '../../api/client';
@@ -10,8 +11,11 @@ import '../../shared/pages.css';
 const EMPTY = { postulante_ci: '', examen_id: '', nota_examen1: '', nota_examen2: '', nota_examen3: '', nota_examen4: '' };
 
 const BADGE_ESTADO = {
-  aprobado:  'pg-badge--aprobado',
-  reprobado: 'pg-badge--bloqueado',
+  aprobado:    'pg-badge--aprobado',
+  reprobado:   'pg-badge--bloqueado',
+  admitido:    'pg-badge--activa',
+  no_admitido: 'pg-badge--cerrada',
+  pendiente:   'pg-badge--pendiente',
 };
 
 export default function Evaluaciones() {
@@ -24,6 +28,68 @@ export default function Evaluaciones() {
   const [evalSel, setEvalSel]     = useState(null);
   const [error, setError]         = useState('');
   const [saving, setSaving]       = useState(false);
+
+  // ── Admisiones ─────────────────────────────────────────────
+  const [modalAdm, setModalAdm]           = useState(false);
+  const [convocatorias, setConvocatorias] = useState([]);
+  const [carreras, setCarreras]           = useState([]);
+  const [convAdm, setConvAdm]             = useState('');
+  const [cupos, setCupos]                 = useState({}); // { carreraId: cupo_maximo }
+  const [cuposInfo, setCuposInfo]         = useState([]); // para mostrar ocupado/disponible
+  const [guardandoCupos, setGuardandoCupos] = useState(false);
+  const [procesando, setProcesando]       = useState(false);
+  const [resultadoAdm, setResultadoAdm]   = useState(null);
+  const [errorAdm, setErrorAdm]           = useState('');
+
+  // ── Cargar catálogos para admisiones ───────────────────────
+  useEffect(() => {
+    client.get('/convocatorias').then(r => setConvocatorias(r.data ?? [])).catch(() => {});
+    client.get('/registro/carreras').then(r => setCarreras(r.data ?? [])).catch(() => {});
+  }, []);
+
+  const cargarCupos = async (convId) => {
+    if (!convId) { setCupos({}); setCuposInfo([]); return; }
+    setErrorAdm('');
+    try {
+      const { data } = await client.get('/admisiones/cupos', { params: { convocatoria_id: convId } });
+      setCuposInfo(data);
+      const map = {};
+      data.forEach(c => { map[c.carrera_id] = c.cupo_maximo; });
+      setCupos(map);
+    } catch { setCuposInfo([]); }
+  };
+
+  const cambiarConvAdm = (id) => { setConvAdm(id); setResultadoAdm(null); cargarCupos(id); };
+
+  const guardarCupos = async () => {
+    if (!convAdm) return;
+    setGuardandoCupos(true); setErrorAdm('');
+    try {
+      for (const [carreraId, cupoMax] of Object.entries(cupos)) {
+        await client.post('/admisiones/cupos', {
+          carrera_id: carreraId,
+          convocatoria_id: convAdm,
+          cupo_maximo: Number(cupoMax) || 0,
+        });
+      }
+      await cargarCupos(convAdm);
+    } catch (err) {
+      setErrorAdm(err.response?.data?.mensaje ?? 'Error al guardar cupos.');
+    } finally { setGuardandoCupos(false); }
+  };
+
+  const ejecutarAdmision = async () => {
+    if (!convAdm) return;
+    if (!confirm('¿Ejecutar el proceso de admisión? Se reasignarán todos los postulantes aprobados según los cupos definidos.')) return;
+    setProcesando(true); setErrorAdm(''); setResultadoAdm(null);
+    try {
+      const { data } = await client.post('/admisiones/procesar', { convocatoria_id: convAdm });
+      setResultadoAdm(data.resumen);
+      await cargarCupos(convAdm);
+    } catch (err) {
+      setErrorAdm(err.response?.data?.mensaje ?? 'Error al procesar admisiones.');
+    } finally { setProcesando(false); }
+  };
 
   const cargar = async () => {
     setLoading(true);
@@ -104,16 +170,24 @@ export default function Evaluaciones() {
     <div className="pg">
       <div className="pg-header">
         <div className="pg-header__left">
-          <p className="pg-tag">CU18</p>
+          <p className="pg-tag">CU17</p>
           <h1 className="pg-title">Resultados de Admisión</h1>
           <p className="pg-subtitle">{evals.length} evaluación(es) registrada(s)</p>
         </div>
-        <button className="pg-btn pg-btn--primary" onClick={abrirCrear}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Registrar Notas
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="pg-btn pg-btn--ghost" onClick={() => { setModalAdm(true); setResultadoAdm(null); setErrorAdm(''); }}>
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <circle cx={12} cy={12} r={10}/><path d="M12 8v4l3 3"/>
+            </svg>
+            Procesar Admisiones
+          </button>
+          <button className="pg-btn pg-btn--primary" onClick={abrirCrear}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Registrar Notas
+          </button>
+        </div>
       </div>
 
       <div className="pg-filters">
@@ -182,6 +256,115 @@ export default function Evaluaciones() {
           </table>
         )}
       </div>
+
+      {/* Modal Procesar Admisiones */}
+      {modalAdm && (
+        <div className="pg-overlay" onClick={() => setModalAdm(false)}>
+          <div className="pg-modal" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
+            <div className="pg-modal__header">
+              <h3>Procesar Admisiones por Carrera</h3>
+              <button className="pg-modal__close" onClick={() => setModalAdm(false)}>✕</button>
+            </div>
+            <div className="pg-modal__body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+              {/* 1. Seleccionar convocatoria */}
+              <div className="pg-field">
+                <label>Convocatoria *</label>
+                <select value={convAdm} onChange={e => cambiarConvAdm(e.target.value)}>
+                  <option value="">— Seleccionar convocatoria —</option>
+                  {convocatorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </div>
+
+              {/* 2. Tabla de cupos */}
+              {convAdm && (
+                <div>
+                  <p style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6b7280', marginBottom: '0.6rem' }}>
+                    Cupos por carrera
+                  </p>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                        <th style={{ textAlign: 'left', padding: '6px 8px', color: '#374151', fontWeight: 700 }}>Carrera</th>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', color: '#374151', fontWeight: 700 }}>Cupo máx.</th>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', color: '#374151', fontWeight: 700 }}>Ocupado</th>
+                        <th style={{ textAlign: 'center', padding: '6px 8px', color: '#374151', fontWeight: 700 }}>Disponible</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {carreras.map(c => {
+                        const info = cuposInfo.find(x => x.carrera_id === c.id);
+                        return (
+                          <tr key={c.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                            <td style={{ padding: '6px 8px', fontWeight: 600 }}>{c.nombre_carrera}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                              <input
+                                type="number" min="0"
+                                value={cupos[c.id] ?? ''}
+                                onChange={e => setCupos(p => ({ ...p, [c.id]: e.target.value }))}
+                                placeholder="0"
+                                style={{ width: 70, textAlign: 'center', padding: '4px 6px', border: '1.5px solid #e5e7eb', borderRadius: 5, fontSize: '0.82rem' }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', color: '#b91c1c', fontWeight: 600 }}>
+                              {info?.cupo_ocupado ?? 0}
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', color: '#15803d', fontWeight: 600 }}>
+                              {info ? info.disponible : (cupos[c.id] ?? 0)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <button className="pg-btn pg-btn--ghost" onClick={guardarCupos} disabled={guardandoCupos}
+                    style={{ marginTop: '0.6rem', fontSize: '0.78rem', padding: '6px 14px' }}>
+                    {guardandoCupos ? 'Guardando...' : 'Guardar cupos'}
+                  </button>
+                </div>
+              )}
+
+              {/* Alerta informativa */}
+              {convAdm && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 7, padding: '10px 14px', fontSize: '0.79rem', color: '#92400e' }}>
+                  <strong>Atención:</strong> el proceso recalcula y reasigna a <em>todos</em> los postulantes aprobados de la convocatoria, en orden de mayor a menor promedio. Primero se intenta la carrera opción 1; si no hay cupo, la opción 2.
+                </div>
+              )}
+
+              {/* Errores */}
+              {errorAdm && (
+                <div className="pg-alert pg-alert--error">{errorAdm}</div>
+              )}
+
+              {/* Resultado del proceso */}
+              {resultadoAdm && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem' }}>
+                  {[
+                    { label: 'Admitidos',    value: resultadoAdm.admitidos,    color: '#15803d', bg: '#f0fdf4' },
+                    { label: 'No admitidos', value: resultadoAdm.no_admitidos, color: '#b91c1c', bg: '#fef2f2' },
+                    { label: 'Reprobados',   value: resultadoAdm.reprobados,   color: '#92400e', bg: '#fffbeb' },
+                    { label: 'Pendientes',   value: resultadoAdm.pendientes,   color: '#374151', bg: '#f9fafb' },
+                  ].map(item => (
+                    <div key={item.label} style={{ background: item.bg, border: `1px solid ${item.color}22`, borderRadius: 8, padding: '10px 12px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: item.color, fontWeight: 700, marginBottom: 4 }}>{item.label}</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: item.color, lineHeight: 1 }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pg-modal__footer">
+              <button className="pg-btn pg-btn--ghost" onClick={() => setModalAdm(false)}>Cerrar</button>
+              <button className="pg-btn pg-btn--primary" onClick={ejecutarAdmision}
+                disabled={!convAdm || procesando}
+                style={{ minWidth: 180 }}>
+                {procesando ? 'Procesando...' : 'Ejecutar proceso de admisión'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal crear / editar */}
       {modal && (
