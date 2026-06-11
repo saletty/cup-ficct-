@@ -477,7 +477,7 @@ export default function Grupos() {
                         <p style={{ fontWeight: 700, fontSize: '1rem', color: '#1f2937' }}>{calculo.convocatoria.nombre}</p>
                         <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>ID: {calculo.convocatoria.id}</p>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                      <div className="pg-grid-3" style={{ marginBottom: '1.25rem' }}>
                         {[
                           { label: 'Postulantes inscritos', value: calculo.total_inscritos, color: '#1e40af', bg: '#eff6ff' },
                           { label: 'Límite por grupo', value: calculo.limite_por_grupo, color: '#065f46', bg: '#ecfdf5' },
@@ -504,7 +504,7 @@ export default function Grupos() {
                     Distribuye los <strong>{calculo.grupos_necesarios}</strong> grupos entre los turnos disponibles.
                     La suma debe ser igual a <strong>{calculo.grupos_necesarios}</strong>.
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div className="pg-grid-3" style={{ marginBottom: '1rem' }}>
                     {[
                       { key: 'mañana', label: '🌅 Mañana', sub: '7:00 am – 1:00 pm', color: '#d97706', bg: '#fffbeb' },
                       { key: 'tarde',  label: '☀️ Tarde',  sub: '1:00 pm – 7:00 pm', color: '#0284c7', bg: '#f0f9ff' },

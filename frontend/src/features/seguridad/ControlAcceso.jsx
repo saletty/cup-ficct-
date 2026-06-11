@@ -47,18 +47,23 @@ export default function ControlAcceso() {
   const cargarRoles = () =>
     client.get('/roles').then(r => setRoles(r.data)).catch(() => {});
 
+  // [CU5·A01] solicitarConfiguracionSistema() — al montar el componente (clic en "Control de Acceso")
   useEffect(() => {
+    // [CU5·A02] obtenerRolesYPermisos() GET /api/v1/roles + GET /api/v1/permisos en paralelo
     Promise.all([client.get('/roles'), client.get('/permisos')])
+      // [CU5·A06] mostrarListaPermisos(listaRolesYPermisos) — almacena catálogos en el estado
       .then(([r, p]) => { setRoles(r.data); setPermisos(p.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  /* ── Selección de rol ── */
+  /* ── [CU5·B07] seleccionarRol(rol_id) — usuario hace clic en un rol de la lista ── */
   const seleccionarRol = useCallback((rol) => {
     setRolSel(rol); setLoadPerm(true);
+    // [CU5·B08] obtenerPermisosPorRol(rol_id) GET /api/v1/roles/:id/permisos
     client.get(`/roles/${rol.id}/permisos`)
       .then(r => {
+        // [CU5·B12] marcarPermisosActuales(permisosAsignadosList) — activa los checkboxes del rol
         const ids = new Set((r.data.permisos ?? []).map(p => p.id));
         setActivos(ids);
         setOriginal(new Set(ids));
@@ -77,13 +82,17 @@ export default function ControlAcceso() {
   };
 
   const guardarPermisos = async () => {
+    // [CU5·C13] guardarCambios(rol_id, nuevos_permisos) — usuario hace clic en "Guardar permisos"
     if (!rolSel) return;
     setSaving(true);
     try {
+      // [CU5·C14] sincronizarPermisos(rol_id, lista_ids) POST /api/v1/roles/:id/permisos
       await client.post(`/roles/${rolSel.id}/permisos`, { permisos: [...activos] });
       setOriginal(new Set(activos));
+      // [CU5·C19] mostrarMensaje(resultado) — [CU5·C17] respuestaOK
       mostrar(`Permisos del rol "${rolSel.nombre}" guardados.`);
     } catch (err) {
+      // [CU5·C19] mostrarMensaje(resultado) — [CU5·C18] respuestaError
       mostrar(err.response?.data?.mensaje || 'Error al guardar permisos.', 'error');
     } finally { setSaving(false); }
   };
@@ -180,7 +189,7 @@ export default function ControlAcceso() {
       )}
 
       {loading ? <div className="pg-loading">Cargando...</div> : (
-        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.25rem', alignItems: 'start' }}>
+        <div className="pg-ctrl-layout">
 
           {/* ── Panel izquierdo: lista de roles ── */}
           <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>

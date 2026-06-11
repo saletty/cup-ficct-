@@ -15,15 +15,15 @@ use Illuminate\Http\Request;
  */
 class PermisoController extends Controller
 {
-    // Listar todos los permisos disponibles en el sistema
+    // [CU5·A03] SELECT * FROM permisos WHERE estado = 'activo' — carga catálogo completo
     public function index(): JsonResponse
     {
         $permisos = Permiso::where('estado', 'activo')->get();
-
+        // [CU5·A04] listaRolesYPermisos + [CU5·A05] HTTP 200 JSON
         return response()->json($permisos);
     }
 
-    // Ver los permisos actuales de un rol
+    // [CU5·B09] SELECT id_permiso FROM rol_permiso WHERE rol_id = $1 — permisos del rol
     public function permisosPorRol(int $rol): JsonResponse
     {
         $rolModel = Rol::with('permisos')->find($rol);
@@ -32,13 +32,14 @@ class PermisoController extends Controller
             return response()->json(['mensaje' => 'Rol no encontrado.'], 404);
         }
 
+        // [CU5·B10] permisosAsignadosList + [CU5·B11] HTTP 200 JSON
         return response()->json([
             'rol'      => $rolModel->nombre,
             'permisos' => $rolModel->permisos,
         ]);
     }
 
-    // Asignar permisos a un rol (reemplaza los existentes)
+    // [CU5·C15] INSERT/DELETE INTO rol_permiso — sincronizar permisos del rol
     public function asignar(Request $request, int $rol): JsonResponse
     {
         $request->validate([
@@ -55,11 +56,12 @@ class PermisoController extends Controller
             return response()->json(['mensaje' => 'Rol no encontrado.'], 404);
         }
 
-        // sync() reemplaza todos los permisos actuales por los enviados
+        // [CU5·C15] sync() — INSERT/DELETE en rol_permiso para igualar la lista enviada
         $rolModel->permisos()->sync($request->permisos);
 
         BitacoraService::log("Permisos del rol '{$rolModel->nombre}' actualizados");
 
+        // [CU5·C16] operacionRealizada + [CU5·C17] HTTP 200 "Permisos del rol actualizados correctamente."
         return response()->json([
             'mensaje'  => 'Permisos asignados correctamente al rol.',
             'rol'      => $rolModel->nombre,

@@ -441,7 +441,7 @@ export default function Reportes() {
           {loading ? <div className="pg-loading">Cargando...</div> : stats ? (
             <>
               {/* Cards de resumen */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+              <div className="pg-grid-5">
                 <Mini label="Inscritos totales" value={stats.total_inscritos} color="#1e40af" bg="#eff6ff" />
                 <Mini label="Evaluados"          value={stats.total_evaluados} color="#374151" bg="#f9fafb" />
                 <Mini label="Aprobados"          value={stats.aprobados}      color="#15803d" bg="#f0fdf4" />
@@ -449,7 +449,7 @@ export default function Reportes() {
                 <Mini label="Tasa de aprobación" value={`${stats.tasa_aprobacion}%`} color="#92400e" bg="#fffbeb" />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <div className="pg-grid-2">
                 {/* Promedios por área */}
                 <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 10, padding: '1.5rem' }}>
                   <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#6b7280', marginBottom: '1.25rem' }}>
@@ -724,7 +724,7 @@ export default function Reportes() {
         <>
           {/* Resumen global */}
           {!loading && resumenDoc && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="pg-grid-4">
               <Mini label="Total grupos"     value={resumenDoc.total_grupos}     color="#1e40af" bg="#eff6ff" />
               <Mini label="Grupos activos"   value={resumenDoc.grupos_activos}   color="#15803d" bg="#f0fdf4" />
               <Mini label="Aprobados global" value={resumenDoc.aprobados_global} color="#15803d" bg="#f0fdf4" />

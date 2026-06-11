@@ -109,6 +109,7 @@ function App() {
     setAuth(data);
     setPage(defaultPage(data.usuario?.rol));
   };
+  // [CU2·16] handleLogout() — setAuth(null) + setPage('dashboard'): limpia el estado y redirige al login
   const handleLogout = () => { setAuth(null); setPage('dashboard'); };
 
   const handlePasswordChanged = () => {

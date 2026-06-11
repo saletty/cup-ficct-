@@ -25,9 +25,10 @@ return [
         'https://cup-ficct-leps9wjz6-salettys-projects.vercel.app',
         'https://cup-ficct-un77.onrender.com',
         'http://localhost:5173',
+        'http://localhost:5174',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['#^http://localhost:\d+$#'],
 
     'allowed_headers' => ['*'],
 

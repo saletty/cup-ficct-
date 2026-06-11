@@ -139,7 +139,7 @@ export default function Convocatorias() {
                   </div>
 
                   {/* Resultado principal */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                  <div className="pg-grid-3" style={{ marginBottom: '1.25rem' }}>
                     {[
                       { label: 'Inscritos confirmados', value: calculo.total_inscritos, color: '#1e40af', bg: '#eff6ff' },
                       { label: 'Límite por grupo', value: calculo.limite_por_grupo, color: '#92400e', bg: '#fefce8' },

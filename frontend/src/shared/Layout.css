@@ -224,8 +224,84 @@
   display: flex;
   flex-direction: column;
   transition: margin-left 0.22s ease;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 .lay-main--collapsed {
   margin-left: 60px;
+}
+
+/* ── Topbar móvil (oculto en desktop) ────────────────────── */
+.lay-topbar { display: none; }
+
+.lay-hamburger {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.lay-hamburger svg { width: 22px; height: 22px; }
+
+.lay-topbar__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lay-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 45;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Topbar fija arriba */
+  .lay-topbar {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: #003A6E;
+    padding: 0 1rem;
+    z-index: 60;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* Overlay visible cuando sidebar está abierto */
+  .lay-overlay {
+    display: block !important;
+  }
+
+  /* Sidebar completamente fuera de pantalla por defecto */
+  .lay-sidebar,
+  .lay-sidebar--collapsed {
+    left: -260px !important;
+    width: 240px !important;
+    transition: left 0.25s ease !important;
+  }
+
+  /* Sidebar visible cuando está abierto */
+  .lay-sidebar--mobile-open {
+    left: 0 !important;
+    box-shadow: 6px 0 24px rgba(0,0,0,0.35);
+  }
+
+  /* Contenido ocupa todo el ancho */
+  .lay-main,
+  .lay-main--collapsed {
+    margin-left: 0 !important;
+    padding-top: 52px !important;
+    transition: none !important;
+  }
 }

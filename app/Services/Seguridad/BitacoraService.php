@@ -13,6 +13,7 @@ class BitacoraService
     public static function log(string $accion, int|null $usuarioCi = null): void
     {
         try {
+            // [CU2·11] INSERT INTO bitacora (...) — escribe el registro de la acción del usuario
             Bitacora::create([
                 'accion'      => $accion,
                 'fecha'       => now(),

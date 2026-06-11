@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useEffect, useCallback } from 'react';
 import client from '../../api/client';
+import '../../shared/pages.css';
 
 /* ── SVG Donut Chart ─────────────────────────────────────── */
 function DonutChart({ value, total, color }) {
@@ -117,9 +118,9 @@ export default function DashboardAdmin() {
   const totalEvals = stats ? stats.aprobados + stats.reprobados : 0;
 
   return (
-    <div style={{ padding: '2rem 2.5rem' }}>
+    <div className="dash-wrap">
       {/* Header */}
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', minWidth: 0 }}>
         <div>
           <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#004B8D', marginBottom: 4 }}>
             CU21
@@ -160,7 +161,7 @@ export default function DashboardAdmin() {
       ) : (
         <>
           {/* Stat cards — 4 columnas */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+          <div className="dash-stats">
             <StatCard
               label="Postulantes Inscritos"
               value={stats?.total_inscritos}
@@ -196,7 +197,7 @@ export default function DashboardAdmin() {
           </div>
 
           {/* Fila inferior: donut + barra de resultados */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
+          <div className="dash-bottom">
 
             {/* Distribución de resultados (donut) */}
             <div style={{ background: 'white', borderRadius: 12, padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb' }}>
@@ -227,7 +228,7 @@ export default function DashboardAdmin() {
               </div>
 
               {/* Métricas de texto */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div className="dash-metrics">
                 {[
                   {
                     label: 'Total evaluados',

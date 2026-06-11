@@ -29,7 +29,7 @@ class UsuarioController extends Controller
         return response()->json($usuarios);
     }
 
-    // Registrar nuevo usuario
+    // [CU3·A03] insertarUsuario(ci, nombre, email, password, rol_id) — registrar nuevo usuario
     public function store(StoreUsuarioRequest $request): JsonResponse
     {
         $usuario = User::create([
@@ -43,6 +43,7 @@ class UsuarioController extends Controller
 
         BitacoraService::log("Usuario creado: CI={$usuario->CI} — {$usuario->nombre_completo}");
 
+        // [CU3·A04] insertado (éxito) + [CU3·A05] HTTP 201 "Usuario registrado correctamente."
         return response()->json([
             'mensaje'  => 'Usuario registrado correctamente.',
             'usuario'  => $usuario->load('rol'),
@@ -61,7 +62,7 @@ class UsuarioController extends Controller
         return response()->json($user->makeVisible(['rol']));
     }
 
-    // Editar datos del usuario
+    // [CU3·B10] modificarUsuario(nombre, email, estado, rol_id) — editar datos del usuario
     public function update(UpdateUsuarioRequest $request, int $usuario): JsonResponse
     {
         $user = User::find($usuario);
@@ -76,10 +77,12 @@ class UsuarioController extends Controller
             $data['contraseña'] = $request->password; // cast 'hashed' encripta automáticamente
         }
 
+        // [CU3·B11] actualizado (éxito) — Eloquent emite UPDATE en la DB
         $user->update($data);
 
         BitacoraService::log("Usuario actualizado: CI={$user->CI} — {$user->nombre_completo}");
 
+        // [CU3·B12] HTTP 200 "Usuario actualizado correctamente."
         return response()->json([
             'mensaje'  => 'Usuario actualizado correctamente.',
             'usuario'  => $user->fresh()->load('rol'),
@@ -142,7 +145,7 @@ class UsuarioController extends Controller
         ]);
     }
 
-    // Desactivar usuario (no se elimina físicamente)
+    // [CU3·C17] desactivarUsuario(ci) — soft delete: estado → INACTIVO (no se elimina físicamente)
     public function destroy(int $usuario): JsonResponse
     {
         $user = User::find($usuario);
@@ -155,6 +158,7 @@ class UsuarioController extends Controller
             return response()->json(['mensaje' => 'El usuario ya está inactivo.'], 409);
         }
 
+        // [CU3·C18] estado_actualizado — Eloquent emite UPDATE SET estado = 'INACTIVO'
         $user->update(['estado' => 'INACTIVO']);
 
         // Revoca todos sus tokens al desactivar
@@ -162,6 +166,7 @@ class UsuarioController extends Controller
 
         BitacoraService::log("Usuario desactivado: CI={$user->CI} — {$user->nombre_completo}");
 
+        // [CU3·C19] HTTP 200 "Estado de usuario actualizado."
         return response()->json([
             'mensaje' => 'Usuario desactivado correctamente.',
         ]);

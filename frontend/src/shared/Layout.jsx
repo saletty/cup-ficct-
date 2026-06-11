@@ -142,6 +142,7 @@ function NavIcon({ path }) {
 export default function Layout({ children, page, setPage, usuario, onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [collapsed, setCollapsed]   = useState(() => localStorage.getItem('nav_collapsed') === '1');
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleCollapsed = () => {
     const next = !collapsed;
@@ -149,11 +150,16 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
     localStorage.setItem('nav_collapsed', next ? '1' : '');
   };
 
+  // [CU2·02] handleLogout() — disparado por el botón de cierre de sesión
   const handleLogout = async () => {
     setLoggingOut(true);
+    // [CU2·03] client.post('/logout') — envía la petición al API con el token en cabecera
     try { await client.post('/logout'); } catch {}
+    // [CU2·13] respuestaExito() — independientemente del resultado, limpia la sesión local
+    // [CU2·14] localStorage.removeItem — elimina token y datos del usuario del navegador
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    // [CU2·15] onLogout() Callback — notifica a App.jsx para redirigir al login
     onLogout();
   };
 
@@ -168,8 +174,23 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
 
   return (
     <div className="lay-root">
+      {/* ── Topbar móvil ─────────────────────────────────────── */}
+      <header className="lay-topbar">
+        <button className="lay-hamburger" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6"  x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <span className="lay-topbar__title">CUP FICCT</span>
+      </header>
+
+      {/* ── Overlay móvil ────────────────────────────────────── */}
+      {mobileOpen && <div className="lay-overlay" onClick={() => setMobileOpen(false)} />}
+
       {/* ── Sidebar ──────────────────────────────────────────── */}
-      <aside className={`lay-sidebar${collapsed ? ' lay-sidebar--collapsed' : ''}`}>
+      <aside className={`lay-sidebar${collapsed ? ' lay-sidebar--collapsed' : ''}${mobileOpen ? ' lay-sidebar--mobile-open' : ''}`}>
         <div className="lay-sidebar__brand">
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
             <path d="M12 2L3 7v6c0 5.25 3.75 10.15 9 11.35C17.25 23.15 21 18.25 21 13V7L12 2z"/>
@@ -194,7 +215,7 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
             <button
               key={item.key}
               className={`lay-nav-item${page === item.key ? ' lay-nav-item--active' : ''}`}
-              onClick={() => setPage(item.key)}
+              onClick={() => { setPage(item.key); setMobileOpen(false); }}
               title={collapsed ? item.label : undefined}
             >
               <span className="lay-nav-item__icon"><NavIcon path={item.icon} /></span>
@@ -211,6 +232,7 @@ export default function Layout({ children, page, setPage, usuario, onLogout }) {
             <span className="lay-user-name">{usuario?.nombre_completo?.split(' ')[0]}</span>
             <span className="lay-user-role">{usuario?.rol}</span>
           </div>
+          {/* [CU2·01] presionarCerrarSesion() — clic en el botón de logout del sidebar */}
           <button className="lay-logout-btn" onClick={handleLogout} disabled={loggingOut} title="Cerrar sesión">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>

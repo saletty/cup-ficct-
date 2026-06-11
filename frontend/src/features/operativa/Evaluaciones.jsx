@@ -338,7 +338,7 @@ export default function Evaluaciones() {
 
               {/* Resultado del proceso */}
               {resultadoAdm && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem' }}>
+                <div className="pg-grid-4" style={{ gap: '0.6rem', marginBottom: 0 }}>
                   {[
                     { label: 'Admitidos',    value: resultadoAdm.admitidos,    color: '#15803d', bg: '#f0fdf4' },
                     { label: 'No admitidos', value: resultadoAdm.no_admitidos, color: '#b91c1c', bg: '#fef2f2' },

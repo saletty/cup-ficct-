@@ -92,6 +92,7 @@ use App\Http\Controllers\Seguridad\UsuarioController;
    PÚBLICAS — sin autenticación
    ============================================================ */
 Route::prefix('v1')->group(function () {
+    // [CU1·03] Recibe POST /api/v1/login y delega en AuthController::login
     Route::post('/login',                [AuthController::class, 'login']);
     Route::post('/password/solicitar',   [PasswordController::class, 'solicitar']);
     Route::post('/password/restablecer', [PasswordController::class, 'restablecer']);
@@ -111,7 +112,7 @@ Route::prefix('v1')->group(function () {
    ============================================================ */
 Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(function () {
 
-    // CU2 — Cerrar sesión (cualquier usuario autenticado)
+    // [CU2·05] POST /api/v1/logout — protegido por Sanctum, delega en AuthController::logout
     Route::post('/logout', [AuthController::class, 'logout'])->withoutMiddleware('cambio.contrasena');
     Route::post('/password/cambiar', [PasswordController::class, 'cambiar'])->withoutMiddleware('cambio.contrasena');
 
@@ -119,10 +120,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
     Route::middleware('permiso:Gestionar usuarios')->group(function () {
         Route::post('/usuarios/importar-postulantes', [UsuarioController::class, 'importarPostulantes']);
         Route::post('/usuarios/importar-docentes',    [UsuarioController::class, 'importarDocentes']);
+        // [CU3·A02] POST /api/v1/usuarios | [CU3·B09] PUT /api/v1/usuarios/:ci | [CU3·C16] DELETE /api/v1/usuarios/:ci
         Route::apiResource('usuarios', UsuarioController::class);
         Route::apiResource('roles', RolController::class);
+        // [CU5·A02] GET /api/v1/permisos — carga catálogo completo de permisos
         Route::get('/permisos',                          [PermisoController::class, 'index']);
+        // [CU5·B08] GET /api/v1/roles/:id/permisos — permisos actuales del rol seleccionado
         Route::get('/roles/{rol}/permisos',              [PermisoController::class, 'permisosPorRol']);
+        // [CU5·C14] POST /api/v1/roles/:id/permisos — sincroniza la lista de permisos
         Route::post('/roles/{rol}/permisos',             [PermisoController::class, 'asignar']);
         Route::post('/roles/{rol}/permisos/{permiso}',   [PermisoController::class, 'agregar']);
         Route::delete('/roles/{rol}/permisos/{permiso}', [PermisoController::class, 'quitar']);

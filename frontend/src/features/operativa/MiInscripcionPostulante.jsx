@@ -54,7 +54,7 @@ function NuevaInscripcionForm({ ci, onExito }) {
         <p style={{ fontSize: '0.84rem', color: '#6b7280' }}>No hay convocatorias habilitadas en este momento.</p>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <div className="pg-grid-3" style={{ marginBottom: '0.75rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#6b7280', marginBottom: 4 }}>
                 Convocatoria *
@@ -191,7 +191,7 @@ export default function MiInscripcionPostulante({ usuario }) {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
+              <div className="pg-grid-4" style={{ gap: '0.5rem', marginBottom: 0 }}>
                 {[
                   { label: '1ª Carrera',       value: ins.carrera_opcion1?.nombre_carrera ?? '—' },
                   { label: '2ª Carrera',        value: ins.carrera_opcion2?.nombre_carrera ?? 'Ninguna' },

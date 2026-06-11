@@ -184,7 +184,7 @@ export default function Login({ onLogin }) {
   const [mode, setMode] = useState('welcome');
   // 'welcome' | 'login' | 'reg-1' | 'reg-2' | 'reset-request' | 'reset-sent'
 
-  /* Formulario de login */
+  // [CU1·01] Estado del formulario — identifier y password que ingresa el usuario
   const [loginForm, setLoginForm] = useState({ identifier: '', password: '' });
   const [showPwd, setShowPwd]     = useState(false);
   const [blockInfo, setBlockInfo] = useState(null); // { segundos, bloqueado_hasta }
@@ -258,11 +258,16 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true); clearMessages();
     try {
+      // [CU1·02] client.post('/login', loginForm) — envía las credenciales al API
       const { data } = await client.post(`/login`, loginForm);
+      // [CU1·10] respuestaExito(data) — recibe token + usuario + debe_cambiar_contrasena
+      // [CU1·11] guardarEnLocalStorage() — persiste token y datos del usuario
       localStorage.setItem('token',   data.token);
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
+      // [CU1·12] redirigirSegunRol(rol) — el padre (App.jsx) decide la vista según el rol
       onLogin({ ...data });
     } catch (err) {
+      // [CU1·14] respuestaLoginFallido(mensaje, intentos_restantes) — maneja 401/429/403
       const d = err.response?.data;
       if (err.response?.status === 429 && d?.segundos) {
         setBlockInfo({ segundos: d.segundos, bloqueado_hasta: d.bloqueado_hasta });
@@ -423,6 +428,7 @@ export default function Login({ onLogin }) {
             </div>
 
             <div className="lp-login-card__body">
+              {/* [CU1·15] mostrarMensaje(resultado_login) — error 401/429/403 o éxito de otros flujos */}
               {error   && <Alert type="error">{error}</Alert>}
               {success && <Alert type="success">{success}</Alert>}
 
@@ -451,12 +457,14 @@ export default function Login({ onLogin }) {
               {/* ── FORMULARIO LOGIN ─────────────────────────── */}
               {mode === 'login' && (
                 <form onSubmit={handleLogin}>
+                  {/* [CU1·15] mostrarMensaje — bloqueo temporal con cuenta regresiva */}
                   {blockInfo?.segundos > 0 && (
                     <div className="lp-blocked">
                       <span className="lp-blocked__icon">{icons.lock}</span>
                       <span>Cuenta bloqueada — Espere <strong>{blockInfo.segundos}s</strong></span>
                     </div>
                   )}
+                  {/* [CU1·01] ingresarCredenciales(identifier, password) — campos del formulario */}
                   <FormGroup label="Correo electrónico o CI" id="identifier">
                     <input id="identifier" name="identifier" type="text"
                       placeholder="usuario@ficct.edu.bo  ó  12345678"

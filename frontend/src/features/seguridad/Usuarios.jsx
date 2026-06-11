@@ -86,16 +86,21 @@ export default function Usuarios() {
     e.preventDefault(); setSaving(true); setErrors({});
     try {
       if (modal === 'crear') {
+        // [CU3·A02] registrarUsuario(datos) POST /api/v1/usuarios — envía los datos del nuevo usuario
         await client.post('/usuarios', { ...form, CI: Number(form.CI), rol_id: Number(form.rol_id) });
+        // [CU3·A05] respuestaOK — "Usuario registrado correctamente."
         setAlerta('Usuario creado correctamente.');
       } else {
         const payload = { nombre_completo: form.nombre_completo, email: form.email, estado: form.estado, rol_id: Number(form.rol_id) };
         if (form.password) payload.password = form.password;
+        // [CU3·B09] actualizarUsuario(ci, datos) PUT /api/v1/usuarios/:ci
         await client.put(`/usuarios/${editando.CI}`, payload);
+        // [CU3·B12] respuestaOK — "Usuario actualizado correctamente."
         setAlerta('Usuario actualizado correctamente.');
       }
       cerrar(); cargar(); setTimeout(() => setAlerta(''), 4000);
     } catch (err) {
+      // [CU3·A06 / CU3·B13] respuestaError — CI duplicado u otro error de validación
       const d = err.response?.data;
       if (d?.errors) {
         const m = {}; Object.entries(d.errors).forEach(([k, v]) => { m[k] = v[0]; }); setErrors(m);
@@ -142,9 +147,12 @@ export default function Usuarios() {
   };
 
   const desactivar = async (u) => {
+    // [CU3·C15] cambiarEstadoUsuario(ci, 'INACTIVO') — usuario presiona "Desactivar"
     if (!window.confirm(`¿Desactivar al usuario "${u.nombre_completo ?? u.CI}"?`)) return;
     try {
+      // [CU3·C16] cambiarEstado(ci) DELETE /api/v1/usuarios/:ci (soft-delete → INACTIVO)
       await client.delete(`/usuarios/${u.CI}`);
+      // [CU3·C20] mostrarMensaje(resultado)
       setAlerta('Usuario desactivado.'); cargar(); setTimeout(() => setAlerta(''), 4000);
     } catch (err) {
       setAlerta(err.response?.data?.mensaje || 'No se pudo desactivar.'); setTimeout(() => setAlerta(''), 4000);
@@ -152,12 +160,15 @@ export default function Usuarios() {
   };
 
   const activar = async (u) => {
+    // [CU3·C15] cambiarEstadoUsuario(ci, 'ACTIVO') — usuario presiona "Activar"
     if (!window.confirm(`¿Activar al usuario "${u.nombre_completo ?? u.CI}"?`)) return;
     try {
+      // [CU3·C16] cambiarEstado(ci, 'ACTIVO') PUT /api/v1/usuarios/:ci { estado: 'ACTIVO' }
       await client.put(`/usuarios/${u.CI}`, { estado: 'ACTIVO' });
+      // [CU3·C20] mostrarMensaje(resultado)
       setAlerta('Usuario activado.'); cargar(); setTimeout(() => setAlerta(''), 4000);
     } catch (err) {
-      setAlerta(err.response?.data?.mensaje || 'No se pudo activar.'); setTimeout(() => setAlerta(''), 4000);
+      setAlerta(err.response?.data?.manera || 'No se pudo activar.'); setTimeout(() => setAlerta(''), 4000);
     }
   };
 
@@ -220,6 +231,7 @@ export default function Usuarios() {
         </div>
       </div>
 
+      {/* [CU3·A07 / CU3·B14 / CU3·C20] mostrarMensaje(resultado) — feedback al administrador */}
       {alerta && <div className="pg-alert pg-alert--success">{alerta}</div>}
 
       <div className="pg-filters">
@@ -308,6 +320,7 @@ export default function Usuarios() {
         </Modal>
       )}
 
+      {/* [CU3·A01] enviarDatosUsuario(datos) — formulario de creación / [CU3·B08] enviarDatosActualizados */}
       {modal && (
         <Modal titulo={modal === 'crear' ? 'Nuevo Usuario' : 'Editar Usuario'} onClose={cerrar}>
           {errors._general && <div style={{ background: '#fee2e2', color: '#b91c1c', borderRadius: 5, padding: '8px 12px', fontSize: '0.82rem', marginBottom: '0.75rem' }}>{errors._general}</div>}
@@ -328,7 +341,7 @@ export default function Usuarios() {
               <input name="password" type="password" value={form.password} onChange={handleChange} required={modal === 'crear'} style={inp(errors.password)} placeholder={modal === 'crear' ? 'Mínimo 8 caracteres' : 'Dejar vacío para no cambiar'} />
             ), errors.password)}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="pg-form-grid pg-form-grid-2">
               {campo('Rol', (
                 <select name="rol_id" value={form.rol_id} onChange={handleChange} required style={inp(errors.rol_id)}>
                   <option value="">-- Seleccionar --</option>

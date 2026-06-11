@@ -1,5 +1,6 @@
 ﻿// Panel principal del postulante — resumen personalizado de su proceso CUP
 import { useState, useEffect } from 'react';
+import '../../shared/pages.css';
 import client from '../../api/client';
 
 function InfoCard({ titulo, contenido, color, bg, icon }) {
@@ -63,7 +64,7 @@ export default function DashboardPostulante({ usuario }) {
   const primerNombre = usuario?.nombre_completo?.split(' ')[0] ?? 'Postulante';
 
   return (
-    <div style={{ padding: '2rem 2.5rem' }}>
+    <div className="dash-wrap">
       {/* Bienvenida */}
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '1.9rem', fontWeight: 700, color: '#1a1a1a', margin: 0, lineHeight: 1.2 }}>
@@ -77,7 +78,7 @@ export default function DashboardPostulante({ usuario }) {
       {loading ? (
         <div style={{ textAlign: 'center', color: '#9ca3af', padding: '3rem' }}>Cargando tu información...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+        <div className="pg-grid-3">
 
           {/* Inscripción */}
           <InfoCard
