@@ -286,18 +286,23 @@ export default function Grupos() {
         <div className="pg-table-wrap" style={{ flex: grupoActivo ? '0 0 45%' : 1 }}>
           {loading ? <div className="pg-loading">Cargando...</div> : (
             <table className="pg-table">
-              <thead><tr><th>Grupo</th><th>Convocatoria</th><th>Modalidad</th><th>Cupo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Grupo</th><th>Convocatoria</th><th>Modalidad</th><th>Turno</th><th>Cupo</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
                 {grupos.length === 0
-                  ? <tr><td colSpan={6} className="pg-empty">No hay grupos registrados</td></tr>
+                  ? <tr><td colSpan={7} className="pg-empty">No hay grupos registrados</td></tr>
                   : grupos.map(g => (
                     <tr key={`${g.id}-${g.convocatoria_id}`}
                       style={{ background: grupoActivo?.id === g.id && grupoActivo?.convocatoria_id === g.convocatoria_id ? '#eff6ff' : '' }}>
                       <td><span className="pg-badge pg-badge--activa">{g.id}</span></td>
                       <td style={{ fontSize: '0.78rem' }}>{g.convocatoria_id}</td>
-                      <td><span className={`pg-badge pg-badge--${g.modalidad === 'virtual' ? 'pendiente' : 'activo'}`}>{g.modalidad}</span></td>
+                      <td><span className={`pg-badge pg-badge--${g.modalidad === 'virtual' ? 'pendiente' : 'activo'}`}>{g.modalidad?.toUpperCase()}</span></td>
+                      <td>
+                        {g.turno
+                          ? <span className={`pg-badge pg-badge--${g.turno === 'mañana' ? 'pendiente' : g.turno === 'tarde' ? 'aprobado' : 'virtual'}`}>{g.turno.toUpperCase()}</span>
+                          : <span style={{ color: '#9ca3af', fontSize: '0.75rem' }}>—</span>}
+                      </td>
                       <td>{g.cupo_maximo}</td>
-                      <td><span className={`pg-badge pg-badge--${g.estado}`}>{g.estado}</span></td>
+                      <td><span className={`pg-badge pg-badge--${g.estado}`}>{g.estado?.toUpperCase()}</span></td>
                       <td>
                         <div className="pg-actions">
                           <button className="pg-act-btn pg-act-btn--view" onClick={() => abrirDetalle(g)} title="Horarios y docentes"><IcoView /></button>

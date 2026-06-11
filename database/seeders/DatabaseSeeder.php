@@ -170,6 +170,11 @@ class DatabaseSeeder extends Seeder
                 'password'        => 'Docente123!',
                 'rol'             => $docente,
             ],
+            // Docentes 5001005-5001008 (segundo bloque base)
+            ['CI' => 5001005, 'nombre_completo' => 'Lic. Roberto Flores Vaca',   'email' => 'rflores@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001006, 'nombre_completo' => 'Lic. Carmen Suárez Arce',    'email' => 'csuarez@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001007, 'nombre_completo' => 'Ing. Marco Antelo Roca',     'email' => 'mantelo@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001008, 'nombre_completo' => 'Ing. Paola Gutiérrez Rojas', 'email' => 'pgutierrez@ficct.edu.bo','password' => 'Docente123!', 'rol' => $docente],
             // Docentes adicionales para cubrir 17 grupos H-2025 (máx 4 grupos/docente)
             ['CI' => 5001009, 'nombre_completo' => 'Ing. Roberto Salinas Vega',    'email' => 'rsalinas@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
             ['CI' => 5001010, 'nombre_completo' => 'Ing. Patricia Loza Mamani',    'email' => 'ploza@ficct.edu.bo',      'password' => 'Docente123!', 'rol' => $docente],
@@ -203,10 +208,14 @@ class DatabaseSeeder extends Seeder
 
         // ── 3b. Perfiles de docente ──────────────────────────────
         $docentesData = [
-            ['CI' => 5001001, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
-            ['CI' => 5001002, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Gestión de TI',            'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
-            ['CI' => 5001003, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
-            ['CI' => 5001004, 'profesion' => 'Licenciada en Informática','maestria' => 'Maestría en Docencia Universitaria',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001001, 'profesion' => 'Ingeniero en Sistemas',     'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
+            ['CI' => 5001002, 'profesion' => 'Licenciada en Matemáticas','maestria' => 'Maestría en Análisis Matemático',      'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001003, 'profesion' => 'Licenciado en Idiomas',    'maestria' => 'Maestría en Educación Bilingüe',       'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001004, 'profesion' => 'Licenciada en Física',     'maestria' => 'Maestría en Física Molecular',         'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001005, 'profesion' => 'Licenciado en Matemáticas','maestria' => 'Maestría en Matemática Aplicada',      'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001006, 'profesion' => 'Licenciada en Letras',     'maestria' => 'Maestría en Lingüística Aplicada',     'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001007, 'profesion' => 'Ingeniero en Física',      'maestria' => 'Maestría en Física Nuclear',           'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001008, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Ciencias de la Computación','diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
             // Docentes adicionales (5 por materia = capacidad para 17 grupos H-2025)
             ['CI' => 5001009, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Informática',                 'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
             ['CI' => 5001010, 'profesion' => 'Ingeniera en Computación', 'maestria' => 'Maestría en Inteligencia Artificial',     'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
