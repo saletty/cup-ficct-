@@ -29,7 +29,11 @@
       "Bash(curl -s -X POST http://127.0.0.1:8000/api/v1/registro/verificar-ci -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"CI\":12345678}')",
       "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/pages/**)",
       "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/components/**)",
-      "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/**)"
+      "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/**)",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/postulantes?per_page=3 -H 'Accept: application/json' -H 'Authorization: Bearer 62|yjK1xqblhzF8i1arLURJfcviFapsVSr2amec7Efd81285a5d')",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/postulantes/7000001 -H 'Accept: application/json' -H 'Authorization: Bearer 62|yjK1xqblhzF8i1arLURJfcviFapsVSr2amec7Efd81285a5d')",
+      "Bash(curl -s 'http://127.0.0.1:8000/api/v1/reportes/ranking?per_page=5&convocatoria_id=H-2025' -H 'Accept: application/json' -H 'Authorization: Bearer 62|yjK1xqblhzF8i1arLURJfcviFapsVSr2amec7Efd81285a5d')",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/grupos?convocatoria_id=H-2025 -H 'Accept: application/json' -H 'Authorization: Bearer 62|yjK1xqblhzF8i1arLURJfcviFapsVSr2amec7Efd81285a5d')"
     ],
     "additionalDirectories": [
       "c:\\Users\\Personal\\Documents\\SI1 GARZON"

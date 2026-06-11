@@ -106,6 +106,12 @@ export default function Reportes() {
   const [rankData,    setRankData]    = useState([]);
   const [rankLoading, setRankLoading] = useState(false);
 
+  // Catálogos para selects de ranking
+  const [catConvocatorias, setCatConvocatorias] = useState([]);
+  const [catCarreras,      setCatCarreras]      = useState([]);
+  const [catDocentes,      setCatDocentes]      = useState([]);
+  const [catGrupos,        setCatGrupos]        = useState([]);
+
   const cargar = async (t) => {
     setLoading(true); setError('');
     try {
@@ -116,10 +122,37 @@ export default function Reportes() {
     } finally { setLoading(false); }
   };
 
+  // Carga catálogos al montar
   useEffect(() => {
-    setError('');         // siempre limpia el error al cambiar de tab
+    Promise.all([
+      client.get('/convocatorias'),
+      client.get('/carreras'),
+      client.get('/docentes'),
+      client.get('/grupos'),
+    ]).then(([conv, carr, doc, grup]) => {
+      setCatConvocatorias(conv.data?.data ?? conv.data ?? []);
+      setCatCarreras(carr.data?.data ?? carr.data ?? []);
+      setCatDocentes(doc.data?.data ?? doc.data ?? []);
+      setCatGrupos(grup.data?.data ?? grup.data ?? []);
+    }).catch(() => {});
+  }, []);
+
+  // Cuando cambia convocatoria en el filtro, recarga grupos de esa convocatoria
+  useEffect(() => {
+    if (!rankFiltros.convocatoria_id) {
+      client.get('/grupos').then(r => setCatGrupos(r.data?.data ?? r.data ?? [])).catch(() => {});
+    } else {
+      client.get('/grupos', { params: { convocatoria_id: rankFiltros.convocatoria_id } })
+        .then(r => setCatGrupos(r.data?.data ?? r.data ?? []))
+        .catch(() => {});
+    }
+    setRF('grupo_id', '');
+  }, [rankFiltros.convocatoria_id]);
+
+  useEffect(() => {
+    setError('');
     setFiltro('');
-    if (tab !== 'ranking' && !data[tab]) cargar(tab); // ranking se carga manualmente
+    if (tab !== 'ranking' && !data[tab]) cargar(tab);
   }, [tab]);
 
   /* ── Reporte 1: Postulantes ── */
@@ -507,35 +540,59 @@ export default function Reportes() {
                 </select>
               </div>
 
-              {/* Convocatoria ID */}
+              {/* Convocatoria */}
               <div>
-                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Convocatoria</label>
-                <input type="number" value={rankFiltros.convocatoria_id} onChange={e => setRF('convocatoria_id', e.target.value)}
-                  placeholder="Todas" style={{ width: 110, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Convocatoria</label>
+                <select value={rankFiltros.convocatoria_id} onChange={e => setRF('convocatoria_id', e.target.value)}
+                  style={{ minWidth: 180, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                  <option value=''>— Todas —</option>
+                  {catConvocatorias.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre ?? c.id}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Carrera ID */}
+              {/* Carrera */}
               <div>
-                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Carrera</label>
-                <input type="number" value={rankFiltros.carrera_id} onChange={e => setRF('carrera_id', e.target.value)}
-                  placeholder="Todas" style={{ width: 100, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Carrera</label>
+                <select value={rankFiltros.carrera_id} onChange={e => setRF('carrera_id', e.target.value)}
+                  style={{ minWidth: 210, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                  <option value=''>— Todas —</option>
+                  {catCarreras.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre_carrera ?? c.id}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Docente CI — solo para tipo=docentes */}
+              {/* Docente — solo para tipo=docentes */}
               {rankFiltros.tipo === 'docentes' && (
                 <div>
-                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>CI Docente</label>
-                  <input type="number" value={rankFiltros.docente_ci} onChange={e => setRF('docente_ci', e.target.value)}
-                    placeholder="Todos" style={{ width: 120, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Docente</label>
+                  <select value={rankFiltros.docente_ci} onChange={e => setRF('docente_ci', e.target.value)}
+                    style={{ minWidth: 200, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                    <option value=''>— Todos —</option>
+                    {catDocentes.map(d => (
+                      <option key={d.CI} value={d.CI}>
+                        {d.CI} — {d.usuario?.nombre_completo ?? d.nombre_completo ?? String(d.CI)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
-              {/* Grupo ID — solo para tipo=docentes */}
+              {/* Grupo — solo para tipo=docentes */}
               {rankFiltros.tipo === 'docentes' && (
                 <div>
-                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Grupo</label>
-                  <input type="number" value={rankFiltros.grupo_id} onChange={e => setRF('grupo_id', e.target.value)}
-                    placeholder="Todos" style={{ width: 100, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Grupo</label>
+                  <select value={rankFiltros.grupo_id} onChange={e => setRF('grupo_id', e.target.value)}
+                    style={{ minWidth: 170, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                    <option value=''>— Todos —</option>
+                    {catGrupos.map(g => (
+                      <option key={`${g.id}-${g.convocatoria_id}`} value={g.id}>
+                        {g.id} — {g.carrera?.id ?? g.carrera_id}{g.turno ? ` · ${g.turno}` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 

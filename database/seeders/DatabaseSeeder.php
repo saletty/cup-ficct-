@@ -170,6 +170,19 @@ class DatabaseSeeder extends Seeder
                 'password'        => 'Docente123!',
                 'rol'             => $docente,
             ],
+            // Docentes adicionales para cubrir 17 grupos H-2025 (máx 4 grupos/docente)
+            ['CI' => 5001009, 'nombre_completo' => 'Ing. Roberto Salinas Vega',    'email' => 'rsalinas@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001010, 'nombre_completo' => 'Ing. Patricia Loza Mamani',    'email' => 'ploza@ficct.edu.bo',      'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001011, 'nombre_completo' => 'Ing. Gonzalo Ríos Condori',    'email' => 'grios@ficct.edu.bo',      'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001012, 'nombre_completo' => 'Lic. Martha Cuellar Apaza',    'email' => 'mcuellar@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001013, 'nombre_completo' => 'Lic. Fernando Coca Torrez',    'email' => 'fcoca@ficct.edu.bo',      'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001014, 'nombre_completo' => 'Lic. Verónica Pinto Huanca',   'email' => 'vpinto@ficct.edu.bo',     'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001015, 'nombre_completo' => 'Lic. Daniel Flores Quispe',    'email' => 'dflores@ficct.edu.bo',    'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001016, 'nombre_completo' => 'Lic. Carmen Rojas Villarroel', 'email' => 'crojas@ficct.edu.bo',     'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001017, 'nombre_completo' => 'Lic. Hernán Castro Medina',    'email' => 'hcastro@ficct.edu.bo',    'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001018, 'nombre_completo' => 'Ing. Cecilia Vargas Ticona',   'email' => 'cvargas@ficct.edu.bo',    'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001019, 'nombre_completo' => 'Ing. Mario Gutiérrez Lazo',    'email' => 'mgutierrez@ficct.edu.bo', 'password' => 'Docente123!', 'rol' => $docente],
+            ['CI' => 5001020, 'nombre_completo' => 'Ing. Elena Morales Serrano',   'email' => 'emorales@ficct.edu.bo',   'password' => 'Docente123!', 'rol' => $docente],
         ];
 
         foreach ($usuarios as $u) {
@@ -190,10 +203,23 @@ class DatabaseSeeder extends Seeder
 
         // ── 3b. Perfiles de docente ──────────────────────────────
         $docentesData = [
-            ['CI' => 5001001, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
-            ['CI' => 5001002, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Gestión de TI',            'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
-            ['CI' => 5001003, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
-            ['CI' => 5001004, 'profesion' => 'Licenciada en Informática','maestria' => 'Maestría en Docencia Universitaria',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior'],
+            ['CI' => 5001001, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
+            ['CI' => 5001002, 'profesion' => 'Ingeniera en Informática', 'maestria' => 'Maestría en Gestión de TI',            'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001003, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ingeniería de Software',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001004, 'profesion' => 'Licenciada en Informática','maestria' => 'Maestría en Docencia Universitaria',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            // Docentes adicionales (5 por materia = capacidad para 17 grupos H-2025)
+            ['CI' => 5001009, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Informática',                 'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
+            ['CI' => 5001010, 'profesion' => 'Ingeniera en Computación', 'maestria' => 'Maestría en Inteligencia Artificial',     'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
+            ['CI' => 5001011, 'profesion' => 'Ingeniero en Sistemas',    'maestria' => 'Maestría en Ciencias de la Computación',  'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 1],
+            ['CI' => 5001012, 'profesion' => 'Licenciada en Matemáticas','maestria' => 'Maestría en Matemática Pura',             'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001013, 'profesion' => 'Licenciado en Matemáticas','maestria' => 'Maestría en Estadística',                 'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001014, 'profesion' => 'Licenciada en Matemáticas','maestria' => 'Maestría en Matemática Aplicada',         'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 2],
+            ['CI' => 5001015, 'profesion' => 'Licenciado en Lingüística','maestria' => 'Maestría en Enseñanza del Inglés',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001016, 'profesion' => 'Licenciada en Letras',     'maestria' => 'Maestría en Lingüística Computacional',   'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001017, 'profesion' => 'Licenciado en Idiomas',    'maestria' => 'Maestría en Lingüística Aplicada',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 3],
+            ['CI' => 5001018, 'profesion' => 'Ingeniera en Física',      'maestria' => 'Maestría en Física Teórica',              'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001019, 'profesion' => 'Ingeniero en Electrónica', 'maestria' => 'Maestría en Física Aplicada',             'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
+            ['CI' => 5001020, 'profesion' => 'Licenciada en Física',     'maestria' => 'Maestría en Física Computacional',        'diplomado_educacion_superior' => 'Diplomado en Educación Superior', 'materia_id' => 4],
         ];
 
         foreach ($docentesData as $d) {

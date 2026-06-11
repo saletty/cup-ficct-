@@ -14,7 +14,7 @@ class Grupo extends Model
     protected $keyType      = 'string';
     public    $timestamps   = false;
 
-    protected $fillable = ['id', 'convocatoria_id', 'carrera_id', 'modalidad', 'cupo_maximo', 'estado'];
+    protected $fillable = ['id', 'convocatoria_id', 'carrera_id', 'modalidad', 'cupo_maximo', 'estado', 'turno'];
 
     public static function findByKey(string $id, string $convocatoriaId): ?self
     {
