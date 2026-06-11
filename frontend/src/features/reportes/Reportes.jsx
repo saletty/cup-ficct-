@@ -117,8 +117,9 @@ export default function Reportes() {
   };
 
   useEffect(() => {
-    if (!data[tab]) cargar(tab);
+    setError('');         // siempre limpia el error al cambiar de tab
     setFiltro('');
+    if (tab !== 'ranking' && !data[tab]) cargar(tab); // ranking se carga manualmente
   }, [tab]);
 
   /* ── Reporte 1: Postulantes ── */
@@ -206,6 +207,28 @@ export default function Reportes() {
   const csvRanking = () => {
     if (!rankData.length) return;
     exportarCSV(rankData, 'reporte_ranking_CUP');
+  };
+
+  const pdfEstadisticas = () => {
+    if (!stats) return;
+    exportarPDF('Estadísticas Generales — CU21', `
+      <table>
+        <thead><tr><th>Indicador</th><th style="text-align:right">Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Total inscritos</td>   <td style="text-align:right;font-weight:700">${stats.total_inscritos}</td></tr>
+          <tr><td>Total evaluados</td>   <td style="text-align:right;font-weight:700">${stats.total_evaluados}</td></tr>
+          <tr><td>Aprobados</td>         <td style="text-align:right;font-weight:700" class="aprobado">${stats.aprobados}</td></tr>
+          <tr><td>Reprobados</td>        <td style="text-align:right;font-weight:700" class="reprobado">${stats.reprobados}</td></tr>
+          <tr><td>Tasa de aprobación</td><td style="text-align:right;font-weight:700">${stats.tasa_aprobacion}%</td></tr>
+          <tr><td>Promedio general</td>  <td style="text-align:right;font-weight:700">${stats.promedio_general ?? '—'}</td></tr>
+          <tr><td>Promedio Computación</td><td style="text-align:right">${stats.promedio_nota1 ?? '—'}</td></tr>
+          <tr><td>Promedio Matemáticas</td><td style="text-align:right">${stats.promedio_nota2 ?? '—'}</td></tr>
+          <tr><td>Promedio Inglés</td>   <td style="text-align:right">${stats.promedio_nota3 ?? '—'}</td></tr>
+          <tr><td>Promedio Física</td>   <td style="text-align:right">${stats.promedio_nota4 ?? '—'}</td></tr>
+          <tr><td>Mínimo promedio</td>   <td style="text-align:right">${stats.min_promedio ?? '—'}</td></tr>
+          <tr><td>Máximo promedio</td>   <td style="text-align:right">${stats.max_promedio ?? '—'}</td></tr>
+        </tbody>
+      </table>`);
   };
 
   /* ── Reporte 3: Docentes ── */
@@ -376,9 +399,12 @@ export default function Reportes() {
       {/* ── TAB: ESTADÍSTICAS ───────────────────────────────── */}
       {tab === 'estadisticas' && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: '1rem' }}>
             <button className="pg-btn pg-btn--ghost" onClick={csvEstadisticas} style={{ gap: 6 }}>
               <IcoCSV /> Exportar CSV
+            </button>
+            <button className="pg-btn pg-btn--primary" onClick={pdfEstadisticas} disabled={!stats} style={{ gap: 6 }}>
+              <IcoPDF /> Exportar PDF
             </button>
           </div>
 

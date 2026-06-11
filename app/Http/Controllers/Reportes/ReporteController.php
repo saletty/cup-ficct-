@@ -20,7 +20,7 @@ class ReporteController extends Controller
         $postulaciones = Postulacion::with([
             'postulante.usuario:CI,nombre_completo,email',
             'convocatoria:id,nombre',
-            'carreraOpcion1:id,nombre',
+            'carreraOpcion1:id,nombre_carrera',
         ])
         ->whereNotIn('estado_admision', ['anulado'])
         ->orderBy('postulante_ci')
@@ -38,7 +38,7 @@ class ReporteController extends Controller
                 'nombre'             => $p->postulante?->usuario?->nombre_completo ?? '—',
                 'email'              => $p->postulante?->usuario?->email ?? '—',
                 'convocatoria'       => $p->convocatoria?->nombre ?? $p->convocatoria_id,
-                'carrera_opcion1'    => $p->carreraOpcion1?->nombre ?? '—',
+                'carrera_opcion1'    => $p->carreraOpcion1?->nombre_carrera ?? '—',
                 'estado_admision'    => $p->estado_admision,
                 'nota1_computacion'  => $eval?->nota_examen1,
                 'nota2_matematicas'  => $eval?->nota_examen2,
@@ -205,7 +205,7 @@ class ReporteController extends Controller
             SELECT
                 p.grupo_id,
                 p.convocatoria_id,
-                c.nombre                                        AS carrera,
+                c.nombre_carrera                                AS carrera,
                 g.cupo_maximo,
                 g.estado                                        AS grupo_estado,
                 COUNT(DISTINCT p.postulante_ci)                 AS total_estudiantes,
@@ -237,7 +237,7 @@ class ReporteController extends Controller
     // Reporte 3 — Docentes asignados por grupo + grupos con mayor rendimiento
     public function docentes(): JsonResponse
     {
-        $grupos = Grupo::with(['convocatoria:id,nombre', 'carrera:id,nombre'])
+        $grupos = Grupo::with(['convocatoria:id,nombre', 'carrera:id,nombre_carrera'])
             ->orderBy('convocatoria_id')
             ->orderBy('id')
             ->get();
@@ -267,7 +267,7 @@ class ReporteController extends Controller
             return [
                 'grupo_id'       => $g->id,
                 'convocatoria'   => $g->convocatoria?->nombre ?? $g->convocatoria_id,
-                'carrera'        => $g->carrera?->nombre ?? '—',
+                'carrera'        => $g->carrera?->nombre_carrera ?? '—',
                 'modalidad'      => $g->modalidad,
                 'cupo_maximo'    => $g->cupo_maximo,
                 'estado'         => $g->estado,
