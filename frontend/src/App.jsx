@@ -113,6 +113,15 @@ function App() {
   };
   const handleLogout = () => { setAuth(null); setPage('dashboard'); };
 
+  const handlePasswordChanged = () => {
+    setAuth(prev => ({
+      ...prev,
+      debe_cambiar_contrasena: false,
+      usuario: { ...(prev?.usuario ?? {}), debe_cambiar_contrasena: false },
+    }));
+    setPage(defaultPage(auth?.usuario?.rol));
+  };
+
   if (!auth) return <Login onLogin={handleLogin} />;
 
   if (auth.debe_cambiar_contrasena) {
@@ -121,6 +130,7 @@ function App() {
         usuario={auth.usuario}
         debecambiar={true}
         onLogout={handleLogout}
+        onCambiado={handlePasswordChanged}
       />
     );
   }

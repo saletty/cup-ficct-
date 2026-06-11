@@ -150,12 +150,14 @@ function CambioContrasenaObligatorio({ usuario, onCambiado, onLogout }) {
   );
 }
 
-export default function Dashboard({ usuario, debecambiar, onLogout }) {
+export default function Dashboard({ usuario, debecambiar, onLogout, onCambiado }) {
   const [loading, setLoading]           = useState(false);
   const [mustChange, setMustChange]     = useState(!!debecambiar);
 
-  // Si el usuario ya cambió la contraseña, actualizar el flag
-  const handleCambiado = () => setMustChange(false);
+  const handleCambiado = () => {
+    setMustChange(false);
+    if (onCambiado) onCambiado();
+  };
 
   if (mustChange) {
     return <CambioContrasenaObligatorio usuario={usuario} onCambiado={handleCambiado} onLogout={onLogout} />;

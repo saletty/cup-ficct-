@@ -45,25 +45,20 @@ export default function DashboardPostulante({ usuario }) {
   const [loading,     setLoading]     = useState(true);
 
   useEffect(() => {
-    const ci = usuario?.CI;
-    if (!ci) { setLoading(false); return; }
-
     Promise.allSettled([
-      client.get(`/inscripciones/postulante/${ci}`),
+      client.get('/mis-horarios'),
       client.get('/mi-examen'),
       client.get('/mis-resultados'),
-    ]).then(([ins, exa, res]) => {
-      const insData = ins.status === 'fulfilled' ? ins.value.data : null;
-      // Tomar la inscripción más reciente no anulada
-      if (Array.isArray(insData) && insData.length > 0) {
-        const activa = insData.find(i => i.estado_admision !== 'anulado') ?? insData[0];
-        setInscripcion(activa);
-      }
+    ]).then(([hor, exa, res]) => {
+      if (hor.status === 'fulfilled') setInscripcion(hor.value.data?.inscripcion ?? null);
       if (exa.status === 'fulfilled') setExamen(exa.value.data);
-      if (res.status === 'fulfilled') setResultado(res.value.data);
+      if (res.status === 'fulfilled') {
+        const arr = res.value.data;
+        setResultado(Array.isArray(arr) && arr.length > 0 ? arr[arr.length - 1] : null);
+      }
       setLoading(false);
     });
-  }, [usuario]);
+  }, []);
 
   const primerNombre = usuario?.nombre_completo?.split(' ')[0] ?? 'Postulante';
 
@@ -107,12 +102,12 @@ export default function DashboardPostulante({ usuario }) {
             color="#15803d"
             bg="#f0fdf4"
             icon={<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round"><rect x={3} y={4} width={18} height={18} rx={2}/><line x1={16} y1={2} x2={16} y2={6}/><line x1={8} y1={2} x2={8} y2={6}/><line x1={3} y1={10} x2={21} y2={10}/></svg>}
-            contenido={examen?.asignacion ? (
+            contenido={examen?.examen ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <div><strong>Examen:</strong> {examen.examen?.descripcion ?? '—'}</div>
                 <div><strong>Fecha:</strong> {examen.examen?.fecha ?? '—'}</div>
-                <div><strong>Horario:</strong> {examen.examen?.hora_inicio} – {examen.examen?.hora_fin}</div>
-                <div><strong>Aula:</strong> {examen.asignacion?.aula_nro ?? '—'}</div>
+                <div><strong>Horario:</strong> {examen.examen?.hora_inicio?.slice(0,5)} – {examen.examen?.hora_fin?.slice(0,5)}</div>
+                <div><strong>Aula:</strong> {examen.aula_nro ?? '—'}</div>
               </div>
             ) : (
               <span style={{ color: '#6b7280' }}>Aún no te han asignado un examen.</span>
@@ -122,17 +117,17 @@ export default function DashboardPostulante({ usuario }) {
           {/* Mis Resultados */}
           <InfoCard
             titulo="Mis Resultados"
-            color={resultado?.evaluacion?.estado_resultado === 'aprobado' ? '#15803d' : resultado?.evaluacion ? '#b91c1c' : '#92400e'}
-            bg={resultado?.evaluacion?.estado_resultado === 'aprobado' ? '#f0fdf4' : resultado?.evaluacion ? '#fef2f2' : '#fffbeb'}
+            color={resultado?.estado_resultado === 'aprobado' ? '#15803d' : resultado ? '#b91c1c' : '#92400e'}
+            bg={resultado?.estado_resultado === 'aprobado' ? '#f0fdf4' : resultado ? '#fef2f2' : '#fffbeb'}
             icon={<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>}
-            contenido={resultado?.evaluacion ? (
+            contenido={resultado ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div><strong>Computación:</strong> {resultado.evaluacion.nota_examen1 ?? '—'}</div>
-                <div><strong>Matemáticas:</strong> {resultado.evaluacion.nota_examen2 ?? '—'}</div>
-                <div><strong>Inglés:</strong> {resultado.evaluacion.nota_examen3 ?? '—'}</div>
-                <div><strong>Física:</strong> {resultado.evaluacion.nota_examen4 ?? '—'}</div>
-                <div><strong>Promedio:</strong> {resultado.evaluacion.promedio_final ?? '—'}</div>
-                <div style={{ marginTop: 4 }}><EstadoBadge estado={resultado.evaluacion.estado_resultado} /></div>
+                <div><strong>Computación:</strong> {resultado.nota_examen1 ?? '—'}</div>
+                <div><strong>Matemáticas:</strong> {resultado.nota_examen2 ?? '—'}</div>
+                <div><strong>Inglés:</strong> {resultado.nota_examen3 ?? '—'}</div>
+                <div><strong>Física:</strong> {resultado.nota_examen4 ?? '—'}</div>
+                <div><strong>Promedio:</strong> {resultado.promedio_final ?? '—'}</div>
+                <div style={{ marginTop: 4 }}><EstadoBadge estado={resultado.estado_resultado} /></div>
               </div>
             ) : (
               <span style={{ color: '#6b7280' }}>Aún no tienes resultados registrados.</span>

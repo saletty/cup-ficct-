@@ -30,6 +30,9 @@
       "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/pages/**)",
       "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/components/**)",
       "Read(//c/Users/Personal/Documents/SI1 GARZON/Proyecto/cup-ficct-/frontend/src/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Personal\\Documents\\SI1 GARZON"
     ]
   }
 }
