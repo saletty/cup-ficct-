@@ -262,5 +262,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'cambio.contrasena'])->group(fu
         Route::get('/reportes/postulantes',  [ReporteController::class, 'postulantes']);
         Route::get('/reportes/estadisticas', [ReporteController::class, 'estadisticas']);
         Route::get('/reportes/docentes',     [ReporteController::class, 'docentes']);
+        Route::get('/reportes/ranking',      [ReporteController::class, 'ranking']);
     });
 });

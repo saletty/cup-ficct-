@@ -84,12 +84,27 @@ const IcoRef    = () => <svg width={13} height={13} viewBox="0 0 24 24" fill="no
 
 /* ═══════════════════════════════════════════════════════════ */
 
+const ORDEN_OPTS = [
+  { value: 'aprobados',   label: 'Más aprobados' },
+  { value: 'reprobados',  label: 'Más reprobados' },
+  { value: 'promedio',    label: 'Mejor promedio' },
+  { value: 'tasa',        label: 'Mayor tasa de aprobación' },
+];
+
 export default function Reportes() {
   const [tab, setTab]       = useState('postulantes');
   const [data, setData]     = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState('');
   const [filtro, setFiltro] = useState('');
+
+  // Rankings
+  const [rankFiltros, setRankFiltros] = useState({
+    tipo: 'docentes', ordenar: 'aprobados',
+    convocatoria_id: '', carrera_id: '', grupo_id: '', docente_ci: '', limite: 20,
+  });
+  const [rankData,    setRankData]    = useState([]);
+  const [rankLoading, setRankLoading] = useState(false);
 
   const cargar = async (t) => {
     setLoading(true); setError('');
@@ -173,6 +188,26 @@ export default function Reportes() {
     }], 'reporte_estadisticas_CUP');
   };
 
+  /* ── Rankings ── */
+  const cargarRanking = async () => {
+    setRankLoading(true); setError('');
+    try {
+      const params = {};
+      Object.entries(rankFiltros).forEach(([k, v]) => { if (v !== '') params[k] = v; });
+      const { data: res } = await client.get('/reportes/ranking', { params });
+      setRankData(res);
+    } catch (err) {
+      setError(err.response?.data?.mensaje ?? 'Error al cargar el ranking.');
+    } finally { setRankLoading(false); }
+  };
+
+  const setRF = (k, v) => setRankFiltros(p => ({ ...p, [k]: v }));
+
+  const csvRanking = () => {
+    if (!rankData.length) return;
+    exportarCSV(rankData, 'reporte_ranking_CUP');
+  };
+
   /* ── Reporte 3: Docentes ── */
   const grupos     = data.docentes?.grupos ?? [];
   const resumenDoc = data.docentes?.resumen;
@@ -232,6 +267,7 @@ export default function Reportes() {
     { key: 'postulantes',  label: 'Postulantes' },
     { key: 'estadisticas', label: 'Estadísticas' },
     { key: 'docentes',     label: 'Docentes por Grupo' },
+    { key: 'ranking',      label: 'Rankings' },
   ];
 
   const BADGE_R = { aprobado: 'pg-badge--aprobado', reprobado: 'pg-badge--bloqueado', 'sin evaluar': 'pg-badge--pendiente' };
@@ -410,6 +446,196 @@ export default function Reportes() {
               </div>
             </>
           ) : null}
+        </>
+      )}
+
+      {/* ── TAB: RANKINGS ───────────────────────────────────── */}
+      {tab === 'ranking' && (
+        <>
+          {/* Panel de filtros */}
+          <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#6b7280', marginBottom: '0.75rem' }}>
+              Filtros de Ranking
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+              {/* Tipo */}
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Ver por</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['docentes', 'grupos'].map(t => (
+                    <button key={t} onClick={() => { setRF('tipo', t); setRankData([]); }} style={{
+                      padding: '6px 14px', border: '1.5px solid', borderRadius: 6, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, transition: 'all 0.15s',
+                      background: rankFiltros.tipo === t ? '#004B8D' : 'white',
+                      borderColor: rankFiltros.tipo === t ? '#004B8D' : '#d1d5db',
+                      color: rankFiltros.tipo === t ? 'white' : '#374151',
+                    }}>
+                      {t === 'docentes' ? 'Docentes' : 'Grupos'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ordenar */}
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Ordenar por</label>
+                <select value={rankFiltros.ordenar} onChange={e => setRF('ordenar', e.target.value)}
+                  style={{ padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                  {ORDEN_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+
+              {/* Convocatoria ID */}
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Convocatoria</label>
+                <input type="number" value={rankFiltros.convocatoria_id} onChange={e => setRF('convocatoria_id', e.target.value)}
+                  placeholder="Todas" style={{ width: 110, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+              </div>
+
+              {/* Carrera ID */}
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Carrera</label>
+                <input type="number" value={rankFiltros.carrera_id} onChange={e => setRF('carrera_id', e.target.value)}
+                  placeholder="Todas" style={{ width: 100, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+              </div>
+
+              {/* Docente CI — solo para tipo=docentes */}
+              {rankFiltros.tipo === 'docentes' && (
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>CI Docente</label>
+                  <input type="number" value={rankFiltros.docente_ci} onChange={e => setRF('docente_ci', e.target.value)}
+                    placeholder="Todos" style={{ width: 120, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                </div>
+              )}
+
+              {/* Grupo ID — solo para tipo=docentes */}
+              {rankFiltros.tipo === 'docentes' && (
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>ID Grupo</label>
+                  <input type="number" value={rankFiltros.grupo_id} onChange={e => setRF('grupo_id', e.target.value)}
+                    placeholder="Todos" style={{ width: 100, padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }} />
+                </div>
+              )}
+
+              {/* Límite */}
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: 3 }}>Top</label>
+                <select value={rankFiltros.limite} onChange={e => setRF('limite', Number(e.target.value))}
+                  style={{ padding: '6px 10px', border: '1.5px solid #e5e7eb', borderRadius: 6, fontSize: '0.8rem' }}>
+                  {[10, 20, 50, 100].map(n => <option key={n} value={n}>Top {n}</option>)}
+                </select>
+              </div>
+
+              <button className="pg-btn pg-btn--primary" onClick={cargarRanking} disabled={rankLoading}
+                style={{ alignSelf: 'flex-end', minWidth: 100 }}>
+                {rankLoading ? 'Cargando...' : 'Generar'}
+              </button>
+            </div>
+          </div>
+
+          {/* Acciones y conteo */}
+          {rankData.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>{rankData.length} resultado(s)</span>
+              <button className="pg-btn pg-btn--ghost" onClick={csvRanking} style={{ gap: 6 }}>
+                <IcoCSV /> Exportar CSV
+              </button>
+            </div>
+          )}
+
+          {/* Tabla resultados */}
+          <div className="pg-table-wrap">
+            {rankLoading ? <div className="pg-loading">Cargando...</div> : rankData.length === 0 ? (
+              <div className="pg-empty" style={{ padding: '2.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+                Configura los filtros y presiona <strong>Generar</strong> para ver el ranking.
+              </div>
+            ) : rankFiltros.tipo === 'docentes' ? (
+              /* ── Tabla docentes ── */
+              <table className="pg-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 40 }}>#</th>
+                    <th>Docente</th>
+                    <th>CI</th>
+                    <th style={{ textAlign: 'center' }}>Grupos</th>
+                    <th style={{ textAlign: 'center' }}>Estudiantes</th>
+                    <th style={{ textAlign: 'center', color: '#15803d' }}>Aprobados</th>
+                    <th style={{ textAlign: 'center', color: '#b91c1c' }}>Reprobados</th>
+                    <th style={{ textAlign: 'center' }}>Promedio</th>
+                    <th style={{ textAlign: 'center' }}>Tasa aprobación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankData.map((r, i) => (
+                    <tr key={r.docente_ci}>
+                      <td style={{ fontWeight: 800, color: i < 3 ? '#004B8D' : '#9ca3af', fontSize: i < 3 ? '1rem' : '0.85rem', textAlign: 'center' }}>
+                        {i + 1}
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{r.docente_nombre}</td>
+                      <td style={{ color: '#6b7280', fontSize: '0.78rem' }}>{r.docente_ci}</td>
+                      <td style={{ textAlign: 'center' }}>{r.total_grupos}</td>
+                      <td style={{ textAlign: 'center' }}>{r.total_estudiantes}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#15803d' }}>{r.aprobados}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#b91c1c' }}>{r.reprobados}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#004B8D' }}>
+                        {r.promedio_grupo ?? '—'}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {r.tasa_aprobacion != null ? (
+                          <span style={{ fontWeight: 700, color: r.tasa_aprobacion >= 60 ? '#15803d' : '#b91c1c' }}>
+                            {r.tasa_aprobacion}%
+                          </span>
+                        ) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              /* ── Tabla grupos ── */
+              <table className="pg-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 40 }}>#</th>
+                    <th style={{ textAlign: 'center' }}>Grupo</th>
+                    <th style={{ textAlign: 'center' }}>Convocatoria</th>
+                    <th>Carrera</th>
+                    <th style={{ textAlign: 'center' }}>Cupo</th>
+                    <th style={{ textAlign: 'center' }}>Estudiantes</th>
+                    <th style={{ textAlign: 'center', color: '#15803d' }}>Aprobados</th>
+                    <th style={{ textAlign: 'center', color: '#b91c1c' }}>Reprobados</th>
+                    <th style={{ textAlign: 'center' }}>Promedio</th>
+                    <th style={{ textAlign: 'center' }}>Tasa aprobación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankData.map((r, i) => (
+                    <tr key={`${r.grupo_id}-${r.convocatoria_id}`}>
+                      <td style={{ fontWeight: 800, color: i < 3 ? '#004B8D' : '#9ca3af', fontSize: i < 3 ? '1rem' : '0.85rem', textAlign: 'center' }}>
+                        {i + 1}
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.grupo_id}</td>
+                      <td style={{ textAlign: 'center', fontSize: '0.78rem' }}>{r.convocatoria_id}</td>
+                      <td style={{ fontSize: '0.78rem' }}>{r.carrera ?? '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{r.cupo_maximo ?? '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{r.total_estudiantes}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#15803d' }}>{r.aprobados}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#b91c1c' }}>{r.reprobados}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#004B8D' }}>
+                        {r.promedio_grupo ?? '—'}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {r.tasa_aprobacion != null ? (
+                          <span style={{ fontWeight: 700, color: r.tasa_aprobacion >= 60 ? '#15803d' : '#b91c1c' }}>
+                            {r.tasa_aprobacion}%
+                          </span>
+                        ) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </>
       )}
 

@@ -8,6 +8,8 @@ use App\Models\Evaluacion;
 use App\Models\Grupo;
 use App\Models\Postulacion;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 // CU21 — Generar Reportes Estadísticos Obligatorios
 class ReporteController extends Controller
@@ -110,6 +112,126 @@ class ReporteController extends Controller
                 ['nombre' => 'Física',      'promedio' => (float) $s->promedio_nota4],
             ],
         ]);
+    }
+
+    // Reporte 4 — Ranking de docentes o grupos por aprobados / reprobados / promedio
+    // Filtros: tipo (docentes|grupos), convocatoria_id, grupo_id, docente_ci, carrera_id, ordenar, limite
+    public function ranking(Request $request): JsonResponse
+    {
+        $tipo      = $request->input('tipo', 'docentes');
+        $convId    = $request->integer('convocatoria_id') ?: null;
+        $grupoId   = $request->integer('grupo_id')        ?: null;
+        $docenteCi = $request->integer('docente_ci')      ?: null;
+        $carreraId = $request->integer('carrera_id')      ?: null;
+        $ordenar   = $request->input('ordenar', 'aprobados');
+        $limite    = min(max((int) $request->input('limite', 50), 1), 200);
+
+        $col = match ($ordenar) {
+            'reprobados' => 'reprobados',
+            'promedio'   => 'promedio_grupo',
+            'tasa'       => 'tasa_aprobacion',
+            default      => 'aprobados',
+        };
+
+        return $tipo === 'grupos'
+            ? $this->rankingGrupos($convId, $grupoId, $carreraId, $col, $limite)
+            : $this->rankingDocentes($convId, $grupoId, $docenteCi, $carreraId, $col, $limite);
+    }
+
+    private function rankingDocentes(
+        ?int $convId, ?int $grupoId, ?int $docenteCi, ?int $carreraId,
+        string $col, int $limite
+    ): JsonResponse {
+        $where    = ["p.estado_admision != 'anulado'"];
+        $bindings = [];
+
+        if ($convId)    { $where[] = 'ad.convocatoria_id = ?'; $bindings[] = $convId; }
+        if ($grupoId)   { $where[] = 'ad.grupo_id = ?';        $bindings[] = $grupoId; }
+        if ($docenteCi) { $where[] = 'ad.docente_ci = ?';      $bindings[] = $docenteCi; }
+        if ($carreraId) { $where[] = 'g.carrera_id = ?';       $bindings[] = $carreraId; }
+
+        $whereClause = implode(' AND ', $where);
+        $bindings[]  = $limite;
+
+        // DISTINCT ON garantiza un único registro de evaluación por postulante (el del examen más reciente)
+        $sql = <<<SQL
+            SELECT
+                ad.docente_ci,
+                u.nombre_completo                               AS docente_nombre,
+                COUNT(DISTINCT ad.grupo_id)                     AS total_grupos,
+                COUNT(DISTINCT p.postulante_ci)                 AS total_estudiantes,
+                COALESCE(SUM(CASE WHEN e.estado_resultado = 'aprobado'  THEN 1 ELSE 0 END), 0) AS aprobados,
+                COALESCE(SUM(CASE WHEN e.estado_resultado = 'reprobado' THEN 1 ELSE 0 END), 0) AS reprobados,
+                ROUND(AVG(e.promedio_final)::numeric, 2)        AS promedio_grupo,
+                ROUND(
+                    (COALESCE(SUM(CASE WHEN e.estado_resultado = 'aprobado' THEN 1 ELSE 0 END), 0)::float
+                     / NULLIF(COUNT(DISTINCT p.postulante_ci), 0) * 100)::numeric, 1
+                )                                               AS tasa_aprobacion
+            FROM  (SELECT DISTINCT docente_ci, grupo_id, convocatoria_id FROM asignacion_docente) AS ad
+            JOIN  usuario u     ON u."CI"             = ad.docente_ci
+            JOIN  postulacion p ON p.grupo_id         = ad.grupo_id
+                               AND p.convocatoria_id  = ad.convocatoria_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (postulante_ci)
+                    postulante_ci, estado_resultado, promedio_final
+                FROM evaluacion
+                ORDER BY postulante_ci, examen_id DESC
+            ) e ON e.postulante_ci = p.postulante_ci
+            LEFT JOIN grupo g ON g.id = ad.grupo_id AND g.convocatoria_id = ad.convocatoria_id
+            WHERE {$whereClause}
+            GROUP BY ad.docente_ci, u.nombre_completo
+            ORDER BY {$col} DESC NULLS LAST
+            LIMIT ?
+        SQL;
+
+        return response()->json(DB::select($sql, $bindings));
+    }
+
+    private function rankingGrupos(
+        ?int $convId, ?int $grupoId, ?int $carreraId,
+        string $col, int $limite
+    ): JsonResponse {
+        $where    = ["p.estado_admision != 'anulado'", 'p.grupo_id IS NOT NULL'];
+        $bindings = [];
+
+        if ($convId)    { $where[] = 'p.convocatoria_id = ?'; $bindings[] = $convId; }
+        if ($grupoId)   { $where[] = 'p.grupo_id = ?';        $bindings[] = $grupoId; }
+        if ($carreraId) { $where[] = 'g.carrera_id = ?';      $bindings[] = $carreraId; }
+
+        $whereClause = implode(' AND ', $where);
+        $bindings[]  = $limite;
+
+        $sql = <<<SQL
+            SELECT
+                p.grupo_id,
+                p.convocatoria_id,
+                c.nombre                                        AS carrera,
+                g.cupo_maximo,
+                g.estado                                        AS grupo_estado,
+                COUNT(DISTINCT p.postulante_ci)                 AS total_estudiantes,
+                COALESCE(SUM(CASE WHEN e.estado_resultado = 'aprobado'  THEN 1 ELSE 0 END), 0) AS aprobados,
+                COALESCE(SUM(CASE WHEN e.estado_resultado = 'reprobado' THEN 1 ELSE 0 END), 0) AS reprobados,
+                ROUND(AVG(e.promedio_final)::numeric, 2)        AS promedio_grupo,
+                ROUND(
+                    (COALESCE(SUM(CASE WHEN e.estado_resultado = 'aprobado' THEN 1 ELSE 0 END), 0)::float
+                     / NULLIF(COUNT(DISTINCT p.postulante_ci), 0) * 100)::numeric, 1
+                )                                               AS tasa_aprobacion
+            FROM  postulacion p
+            LEFT JOIN (
+                SELECT DISTINCT ON (postulante_ci)
+                    postulante_ci, estado_resultado, promedio_final
+                FROM evaluacion
+                ORDER BY postulante_ci, examen_id DESC
+            ) e ON e.postulante_ci = p.postulante_ci
+            LEFT JOIN grupo g   ON g.id = p.grupo_id AND g.convocatoria_id = p.convocatoria_id
+            LEFT JOIN carrera c ON c.id = g.carrera_id
+            WHERE {$whereClause}
+            GROUP BY p.grupo_id, p.convocatoria_id, c.nombre, g.cupo_maximo, g.estado
+            ORDER BY {$col} DESC NULLS LAST
+            LIMIT ?
+        SQL;
+
+        return response()->json(DB::select($sql, $bindings));
     }
 
     // Reporte 3 — Docentes asignados por grupo + grupos con mayor rendimiento
