@@ -278,5 +278,8 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        // Datos históricos H-2025 (1000 postulantes para reportes y demo)
+        $this->call(ConvocatoriaHistoricaSeeder::class);
     }
 }
